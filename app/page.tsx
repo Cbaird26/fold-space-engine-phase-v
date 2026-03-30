@@ -867,7 +867,7 @@ export default function FoldEnginePage() {
             textAlign: "center",
           }}
         >
-          New Possibility
+          Arrival
         </div>
       )}
       <div
@@ -1082,7 +1082,7 @@ export default function FoldEnginePage() {
                       letterSpacing: "0.06em",
                     }}
                   >
-                    ESC / NEW POSSIBILITY
+                    ESC / ARRIVAL
                   </button>
                 </div>
 

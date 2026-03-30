@@ -18,10 +18,16 @@ export function evaluateConstraints({
   const topologyStable = instability < 0.6;
   const causalitySafe = energyBudget < 1.5;
   const returnPathAvailable = coherence * (1 - instability) > 0.25;
+  const distancePressure = Math.min(1, distance / 18);
+  const energyPressure = Math.max(0, 0.35 - energyBudget) / 0.35;
+  const coherencePressure = 1 - coherence;
   const riskScore =
-    0.4 * instability +
-    0.3 * Math.max(0, distance - energyBudget) +
-    0.3 * (1 - coherence);
+    0.3 * instability +
+    0.24 * coherencePressure +
+    0.22 * distancePressure +
+    0.16 * Math.min(1, energyPressure) +
+    (topologyStable ? 0 : 0.05) +
+    (returnPathAvailable ? 0 : 0.03);
 
   return {
     causalitySafe,

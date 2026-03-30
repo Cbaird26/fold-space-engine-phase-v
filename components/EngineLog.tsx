@@ -6,7 +6,10 @@ const FONT = "'Courier New', 'Lucida Console', monospace";
 export function EngineLog({ logs }: { logs: LoggedRun[] }) {
   return (
     <div style={{ border: `1px solid ${P.border}`, borderRadius: 8, padding: 12, background: "#0b0d16", color: P.text, fontFamily: FONT }}>
-      <div style={{ marginBottom: 10, color: P.faint, textTransform: "uppercase", fontSize: 12, letterSpacing: "0.08em" }}>Engine Log</div>
+      <div style={{ marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ color: P.faint, textTransform: "uppercase", fontSize: 12, letterSpacing: "0.08em" }}>Engine Log</div>
+        <div style={{ color: P.faint, fontSize: 11 }}>{logs.length} recorded run{logs.length === 1 ? "" : "s"}</div>
+      </div>
       <div style={{ maxHeight: 250, overflow: "auto", fontSize: 11, lineHeight: 1.6 }}>
         {logs.length === 0 ? (
           <div style={{ color: P.faint }}>No recorded runs yet.</div>

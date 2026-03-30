@@ -2,6 +2,10 @@
 
 Fold-Space Engine is a constrained simulation framework for exploring effective spacetime deformation, coherence-weighted path selection, and measurement-facing visibility suppression mappings.
 
+Live site:
+
+- https://cbaird26.github.io/fold-space-engine-phase-v/
+
 ## What this project is
 - A computational simulation environment
 - A research-facing visualization system
@@ -86,6 +90,11 @@ fold-space-engine-phase-v/
 npm install
 npm run dev
 ```
+
+## Current live surface
+- Public Next.js static-export site hosted on GitHub Pages
+- Interactive fold field, parameter controls, presets, run logging, and JSON export
+- Constraint, visibility, and quick sweep panels exposed in the first-screen experience
 
 ## Deploy
 

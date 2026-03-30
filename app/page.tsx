@@ -32,6 +32,23 @@ const MODE_LABELS: Record<FoldMode, string> = {
   EXP: "Experimental",
 };
 
+function formatVector(vector: Vector3) {
+  return vector.map((value) => value.toFixed(1)).join(", ");
+}
+
+function getEngineStatus(foldScore: number, riskScore: number, topologyStable: boolean, returnPathAvailable: boolean) {
+  if (!topologyStable || riskScore >= 0.78) {
+    return "Abort Window";
+  }
+  if (foldScore >= 0.74 && returnPathAvailable) {
+    return "Stable Corridor";
+  }
+  if (foldScore >= 0.48) {
+    return "Marginal Corridor";
+  }
+  return "Local Distortion";
+}
+
 export default function FoldEnginePage() {
   const presetList = presets as Preset[];
   const [mode, setMode] = useState<FoldMode>("SIM");
@@ -45,6 +62,7 @@ export default function FoldEnginePage() {
   const [eta, setEta] = useState(0.3);
   const [t, setT] = useState(0);
   const [logs, setLogs] = useState<LoggedRun[]>([]);
+  const [selectedPresetIndex, setSelectedPresetIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setT((p) => p + 0.03), 30);
@@ -82,9 +100,12 @@ export default function FoldEnginePage() {
   }, [target, origin, curvature, energy, coherence, instability, eta]);
 
   const chosen = [...candidates].sort((a, b) => b.p - a.p)[0]?.data;
+  const chosenProbability = [...candidates].sort((a, b) => b.p - a.p)[0]?.p ?? 0;
   const constraints = evaluateConstraints({ energy, curvature, coherence, instability, distance: targetDistance });
   const gammaEff = computeGammaEffective({ instability, coherence, aperture });
   const visibility = computeVisibility({ Gamma: gammaEff, T: 1e-6, dx: aperture * 1e-3 });
+  const engineStatus = getEngineStatus(foldScore, constraints.riskScore, constraints.topologyStable, constraints.returnPathAvailable);
+  const statusColor = engineStatus === "Stable Corridor" ? P.green : engineStatus === "Marginal Corridor" ? P.gold : P.ember;
 
   const sweepRows = useMemo(() => {
     return [0.25, 0.45, 0.65, 0.85].flatMap((c) =>
@@ -99,6 +120,7 @@ export default function FoldEnginePage() {
   const applyPreset = (index: number) => {
     const preset = presetList[index];
     if (!preset) return;
+    setSelectedPresetIndex(index);
     setEnergy(preset.energy);
     setCurvature(preset.curvature);
     setCoherence(preset.coherence);
@@ -153,6 +175,30 @@ export default function FoldEnginePage() {
         <EqBlock color={P.glow2}>{"P(i) ∝ |c_i|² exp(η ΔE_i)"}</EqBlock>
         <EqBlock color={P.gold}>{"V / V0 = exp(-Γ T Δx²)"}</EqBlock>
 
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, margin: "18px 0 20px" }}>
+          {[
+            { label: "Engine Status", value: engineStatus, accent: statusColor },
+            { label: "Mode", value: MODE_LABELS[mode], accent: P.glow },
+            { label: "Target Vector", value: formatVector(target), accent: P.glow2 },
+            { label: "Branch Confidence", value: `${(chosenProbability * 100).toFixed(1)}%`, accent: P.gold },
+            { label: "Preset", value: selectedPresetIndex === null ? "Custom" : presetList[selectedPresetIndex].name, accent: P.green },
+          ].map((item) => (
+            <div
+              key={item.label}
+              style={{
+                border: `1px solid ${item.accent}30`,
+                background: `${item.accent}10`,
+                borderRadius: 12,
+                padding: "14px 16px",
+                boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
+              }}
+            >
+              <div style={{ color: P.dim, textTransform: "uppercase", fontSize: 11, letterSpacing: "0.08em", marginBottom: 8 }}>{item.label}</div>
+              <div style={{ color: item.accent, fontSize: item.label === "Target Vector" ? 15 : 18, fontWeight: 700 }}>{item.value}</div>
+            </div>
+          ))}
+        </div>
+
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "16px 0 20px" }}>
           {(["SIM", "RES", "EXP"] as FoldMode[]).map((m) => (
             <button
@@ -194,24 +240,27 @@ export default function FoldEnginePage() {
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 480px) minmax(260px, 1fr)", gap: 20, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, alignItems: "start" }}>
           <div>
             <FoldField aperture={aperture} stability={stability} t={t} chosenTarget={chosen?.offset ?? target} />
+            <div style={{ marginTop: 12, color: P.dim, fontSize: 12, lineHeight: 1.7 }}>
+              This public build exposes the constrained simulation surface: corridor score, path weighting, topology checks, and the visibility/dephasing bridge.
+            </div>
           </div>
           <div style={{ background: P.panel, border: `1px solid ${P.border}`, borderRadius: 12, padding: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <div>
-                <Knob label="Energy Density" value={energy} onChange={setEnergy} min={0} max={1} />
-                <Knob label="Curvature" value={curvature} onChange={setCurvature} min={0} max={1} color={P.glow2} />
-                <Knob label="Φc Coherence" value={coherence} onChange={setCoherence} min={0} max={1} color={P.glow3} />
-                <Knob label="Ethical Bias" value={ethics} onChange={setEthics} min={-1} max={1} color={P.green} />
-                <Knob label="Instability" value={instability} onChange={setInstability} min={0} max={1} color={P.ember} />
-                <Knob label="η Selection Bias" value={eta} onChange={setEta} min={-1.5} max={1.5} color={P.gold} />
+                <Knob label="Energy Density" value={energy} onChange={(value) => { setSelectedPresetIndex(null); setEnergy(value); }} min={0} max={1} />
+                <Knob label="Curvature" value={curvature} onChange={(value) => { setSelectedPresetIndex(null); setCurvature(value); }} min={0} max={1} color={P.glow2} />
+                <Knob label="Φc Coherence" value={coherence} onChange={(value) => { setSelectedPresetIndex(null); setCoherence(value); }} min={0} max={1} color={P.glow3} />
+                <Knob label="Ethical Bias" value={ethics} onChange={(value) => { setSelectedPresetIndex(null); setEthics(value); }} min={-1} max={1} color={P.green} />
+                <Knob label="Instability" value={instability} onChange={(value) => { setSelectedPresetIndex(null); setInstability(value); }} min={0} max={1} color={P.ember} />
+                <Knob label="η Selection Bias" value={eta} onChange={(value) => { setSelectedPresetIndex(null); setEta(value); }} min={-1.5} max={1.5} color={P.gold} />
               </div>
               <div>
-                <Knob label="Target X" value={target[0]} onChange={(v) => setTarget([v, target[1], target[2]])} min={-20} max={20} step={0.1} />
-                <Knob label="Target Y" value={target[1]} onChange={(v) => setTarget([target[0], v, target[2]])} min={-20} max={20} step={0.1} color={P.glow2} />
-                <Knob label="Target Z" value={target[2]} onChange={(v) => setTarget([target[0], target[1], v])} min={-20} max={20} step={0.1} color={P.glow3} />
+                <Knob label="Target X" value={target[0]} onChange={(v) => { setSelectedPresetIndex(null); setTarget([v, target[1], target[2]]); }} min={-20} max={20} step={0.1} />
+                <Knob label="Target Y" value={target[1]} onChange={(v) => { setSelectedPresetIndex(null); setTarget([target[0], v, target[2]]); }} min={-20} max={20} step={0.1} color={P.glow2} />
+                <Knob label="Target Z" value={target[2]} onChange={(v) => { setSelectedPresetIndex(null); setTarget([target[0], target[1], v]); }} min={-20} max={20} step={0.1} color={P.glow3} />
                 <div style={{ marginTop: 12 }}>
                   <div style={{ color: P.dim, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Presets</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -219,7 +268,16 @@ export default function FoldEnginePage() {
                       <button
                         key={preset.name}
                         onClick={() => applyPreset(idx)}
-                        style={{ textAlign: "left", border: `1px solid ${P.border}`, background: "#0b0d16", color: P.text, padding: "8px 10px", borderRadius: 8, cursor: "pointer", fontFamily: FONT }}
+                        style={{
+                          textAlign: "left",
+                          border: `1px solid ${selectedPresetIndex === idx ? P.glow : P.border}`,
+                          background: selectedPresetIndex === idx ? `${P.glow}14` : "#0b0d16",
+                          color: P.text,
+                          padding: "8px 10px",
+                          borderRadius: 8,
+                          cursor: "pointer",
+                          fontFamily: FONT,
+                        }}
                       >
                         {preset.name}
                       </button>
@@ -249,7 +307,7 @@ export default function FoldEnginePage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginTop: 20 }}>
           <ParameterSweepPanel rows={sweepRows} />
           <EngineLog logs={logs} />
         </div>

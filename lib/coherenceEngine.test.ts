@@ -42,7 +42,7 @@ describe("coherence warp core", () => {
 
     expect(clearState.stage).toBe("CLEAR");
     expect(clearState.clearScreenFlash).toBeGreaterThan(0.5);
-    expect(flashState.stage).toBe("FLASH");
+    expect(flashState.stage).toBe("COHERENT");
     expect(flashState.hotFlash).toBeGreaterThan(0.5);
   });
 });

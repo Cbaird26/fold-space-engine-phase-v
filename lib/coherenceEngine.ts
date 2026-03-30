@@ -14,7 +14,7 @@ export type CoherenceWarpCoreState = {
 
 export type CoherenceSequenceState = {
   loopProgress: number;
-  stage: "ENGAGE" | "WARP" | "CLEAR" | "FLASH";
+  stage: "ENGAGE" | "WARP" | "CLEAR" | "COHERENT";
   sequenceLabel: string;
   clearScreenFlash: number;
   hotFlash: number;
@@ -35,7 +35,7 @@ export function computeCoherenceSequence({
         ? "WARP"
         : loopProgress < 0.9
           ? "CLEAR"
-          : "FLASH";
+          : "COHERENT";
   const sequenceLabel =
     stage === "ENGAGE"
       ? "ENGAGE (INTENTION)"
@@ -43,7 +43,7 @@ export function computeCoherenceSequence({
         ? "WARP"
         : stage === "CLEAR"
           ? "ARRIVAL / CLEAR SCREEN"
-          : "HOT FLASH";
+          : "COHERENT";
   const clearScreenFlash = Math.max(0, 1 - Math.abs(loopProgress - 0.82) / 0.11);
   const hotFlash = Math.max(0, 1 - Math.abs(loopProgress - 0.95) / 0.05);
 

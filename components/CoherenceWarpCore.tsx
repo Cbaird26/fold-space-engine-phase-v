@@ -224,7 +224,7 @@ export function CoherenceWarpCore({
         : "rgba(212,216,232,0.62)";
     ctx.fillText("ARRIVAL / CLEAR SCREEN", focusX - 80, focusY + 48);
     ctx.fillStyle = sequenceProgress >= 0.9 ? `rgba(255,255,255,${0.82 + hotFlash * 0.18})` : "rgba(212,216,232,0.62)";
-    ctx.fillText("HOT FLASH", focusX - 30, focusY + 68);
+    ctx.fillText("COHERENT", focusX - 28, focusY + 68);
 
     const graphLeft = 28;
     const graphTop = height - 86;
@@ -263,7 +263,7 @@ export function CoherenceWarpCore({
       { label: "ENGAGE", active: sequenceProgress < 0.24, x: sequenceLeft + sequenceWidth * 0.06 },
       { label: "WARP", active: sequenceProgress >= 0.24 && sequenceProgress < 0.74, x: sequenceLeft + sequenceWidth * 0.34 },
       { label: "CLEAR", active: sequenceProgress >= 0.74 && sequenceProgress < 0.9, x: sequenceLeft + sequenceWidth * 0.64 },
-      { label: "FLASH", active: sequenceProgress >= 0.9, x: sequenceLeft + sequenceWidth * 0.84 },
+      { label: "COHERENT", active: sequenceProgress >= 0.9, x: sequenceLeft + sequenceWidth * 0.8 },
     ];
 
     steps.forEach((step, index) => {
@@ -281,7 +281,7 @@ export function CoherenceWarpCore({
     <div style={{ border: `1px solid ${P.border}`, borderRadius: 12, padding: 14, background: P.panel }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
         <div style={{ color: P.text, fontWeight: 700, fontSize: 15 }}>Coherence Engine Warp Core</div>
-        <div style={{ color: sequenceLabel === "ARRIVAL / CLEAR SCREEN" || sequenceLabel === "HOT FLASH" ? "#ffffff" : state.phase === "LOCKED" ? P.green : state.phase === "RAMP" ? P.gold : P.glow, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+        <div style={{ color: sequenceLabel === "ARRIVAL / CLEAR SCREEN" || sequenceLabel === "COHERENT" ? "#ffffff" : state.phase === "LOCKED" ? P.green : state.phase === "RAMP" ? P.gold : P.glow, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" }}>
           {sequenceLabel}
         </div>
       </div>
@@ -307,7 +307,7 @@ export function CoherenceWarpCore({
       </div>
 
       <div style={{ marginTop: 8, color: P.text, fontFamily: FONT, fontSize: 11, lineHeight: 1.6 }}>
-        Loop: Engage (Intention) - Warp - Arrival / Clear Screen - Hot Flash - Re-engage
+        Loop: Engage (Intention) - Warp - Arrival / Clear Screen - Coherent - Re-engage
       </div>
     </div>
   );

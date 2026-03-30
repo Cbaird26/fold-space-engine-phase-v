@@ -30,19 +30,19 @@ describe("coherence warp core", () => {
     expect(state.guidance).toContain("indefinite");
   });
 
-  it("emits clear and flash stages on the coherence loop", () => {
+  it("emits clear and coherent stages on the coherence loop", () => {
     const clearState = computeCoherenceSequence({
       lockStrength: 0.8,
       t: 4.0,
     });
-    const flashState = computeCoherenceSequence({
+    const coherentState = computeCoherenceSequence({
       lockStrength: 0.8,
       t: 4.43,
     });
 
     expect(clearState.stage).toBe("CLEAR");
-    expect(clearState.clearScreenFlash).toBeGreaterThan(0.5);
-    expect(flashState.stage).toBe("COHERENT");
-    expect(flashState.hotFlash).toBeGreaterThan(0.5);
+    expect(clearState.clearScreenWhiteout).toBeGreaterThan(0.5);
+    expect(coherentState.stage).toBe("COHERENT");
+    expect(coherentState.coherentGlow).toBeGreaterThan(0.5);
   });
 });

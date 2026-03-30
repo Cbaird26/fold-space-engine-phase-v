@@ -66,8 +66,10 @@ export function CoherenceWarpCore({
     const chamberHeight = 128;
     const tunnelPulse = Math.sin(t * 4) * 6;
     const sequenceProgress = loopProgress;
-    const arrivalFlash = sequence.clearScreenFlash;
-    const hotFlash = sequence.hotFlash;
+    const clearScreenWhiteout = sequence.clearScreenWhiteout;
+    const coherentGlow = sequence.coherentGlow;
+    const whiteoutStage =
+      sequence.stage === "CLEAR" || sequence.stage === "COHERENT";
     const warpDrift = 0.55 + state.lockStrength * 0.85;
     const baseColor =
       state.phase === "LOCKED"
@@ -92,29 +94,34 @@ export function CoherenceWarpCore({
     ctx.fillStyle = tunnelGlow;
     ctx.fillRect(0, 0, width, height);
 
-    if (arrivalFlash > 0.02) {
+    if (clearScreenWhiteout > 0.02) {
       const arrivalWash = ctx.createRadialGradient(focusX, focusY, 12, focusX, focusY, 300);
-      arrivalWash.addColorStop(0, `rgba(255,255,255,${0.92 + arrivalFlash * 0.08})`);
-      arrivalWash.addColorStop(0.25, `rgba(255,255,255,${0.52 + arrivalFlash * 0.28})`);
-      arrivalWash.addColorStop(0.55, `rgba(225,245,255,${0.18 + arrivalFlash * 0.22})`);
+      arrivalWash.addColorStop(0, `rgba(255,255,255,${0.92 + clearScreenWhiteout * 0.08})`);
+      arrivalWash.addColorStop(0.25, `rgba(255,255,255,${0.52 + clearScreenWhiteout * 0.28})`);
+      arrivalWash.addColorStop(0.55, `rgba(225,245,255,${0.18 + clearScreenWhiteout * 0.22})`);
       arrivalWash.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = arrivalWash;
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = `rgba(255,255,255,${0.16 + arrivalFlash * 0.32})`;
+      ctx.fillStyle = `rgba(255,255,255,${0.16 + clearScreenWhiteout * 0.32})`;
       ctx.fillRect(0, 0, width, height);
     }
 
-    if (hotFlash > 0.02) {
-      const flashWash = ctx.createRadialGradient(focusX, focusY, 18, focusX, focusY, 360);
-      flashWash.addColorStop(0, "rgba(255,255,255,1)");
-      flashWash.addColorStop(0.18, `rgba(255,255,255,${0.9 + hotFlash * 0.1})`);
-      flashWash.addColorStop(0.4, `rgba(255,244,214,${0.48 + hotFlash * 0.32})`);
-      flashWash.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = flashWash;
+    if (coherentGlow > 0.02) {
+      const coherentWash = ctx.createRadialGradient(focusX, focusY, 18, focusX, focusY, 360);
+      coherentWash.addColorStop(0, "rgba(255,255,255,1)");
+      coherentWash.addColorStop(0.18, `rgba(255,255,255,${0.9 + coherentGlow * 0.1})`);
+      coherentWash.addColorStop(0.4, `rgba(255,244,214,${0.48 + coherentGlow * 0.32})`);
+      coherentWash.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = coherentWash;
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = `rgba(255,255,255,${0.28 + hotFlash * 0.52})`;
+      ctx.fillStyle = `rgba(255,255,255,${0.28 + coherentGlow * 0.52})`;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    if (whiteoutStage) {
+      ctx.fillStyle = sequence.stage === "COHERENT" ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.96)";
       ctx.fillRect(0, 0, width, height);
     }
 
@@ -133,7 +140,7 @@ export function CoherenceWarpCore({
     for (let streak = 0; streak < 28; streak += 1) {
       const seed = streak * 17.173;
       const lane = (Math.sin(seed) * 0.5 + 0.5) * 1.4 - 0.7;
-      const progress = (t * (0.22 + state.lockStrength * 0.4 + arrivalFlash * 0.35 + hotFlash * 0.45) + streak * 0.113) % 1;
+      const progress = (t * (0.22 + state.lockStrength * 0.4 + clearScreenWhiteout * 0.35 + coherentGlow * 0.45) + streak * 0.113) % 1;
       const startX = focusX - progress * 300;
       const startY = focusY + lane * (22 + progress * 110);
       const length = 14 + progress * 60 * (0.6 + state.lockStrength);
@@ -182,7 +189,7 @@ export function CoherenceWarpCore({
     ctx.moveTo(chamberX + chamberWidth, focusY);
     ctx.lineTo(focusX - 18, focusY);
     ctx.strokeStyle = beam;
-    ctx.lineWidth = 8 + state.lockStrength * 4 + arrivalFlash * 8 + hotFlash * 12;
+    ctx.lineWidth = 8 + state.lockStrength * 4 + clearScreenWhiteout * 8 + coherentGlow * 12;
     ctx.stroke();
 
     ctx.beginPath();
@@ -195,17 +202,17 @@ export function CoherenceWarpCore({
     ctx.fillStyle = focusCore;
     ctx.fill();
 
-    if (arrivalFlash > 0.02) {
+    if (clearScreenWhiteout > 0.02) {
       ctx.beginPath();
-      ctx.arc(focusX, focusY, 36 + arrivalFlash * 46, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${0.24 + arrivalFlash * 0.46})`;
+      ctx.arc(focusX, focusY, 36 + clearScreenWhiteout * 46, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.24 + clearScreenWhiteout * 0.46})`;
       ctx.fill();
     }
 
-    if (hotFlash > 0.02) {
+    if (coherentGlow > 0.02) {
       ctx.beginPath();
-      ctx.arc(focusX, focusY, 56 + hotFlash * 72, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,248,230,${0.36 + hotFlash * 0.5})`;
+      ctx.arc(focusX, focusY, 56 + coherentGlow * 72, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,248,230,${0.36 + coherentGlow * 0.5})`;
       ctx.fill();
     }
 
@@ -220,10 +227,10 @@ export function CoherenceWarpCore({
     ctx.fillText("WARP", focusX - 20, focusY - 50);
     ctx.fillStyle =
       sequenceProgress >= 0.74 && sequenceProgress < 0.9
-        ? `rgba(255,255,255,${0.78 + arrivalFlash * 0.22})`
+        ? `rgba(255,255,255,${0.78 + clearScreenWhiteout * 0.22})`
         : "rgba(212,216,232,0.62)";
     ctx.fillText("ARRIVAL / CLEAR SCREEN", focusX - 80, focusY + 48);
-    ctx.fillStyle = sequenceProgress >= 0.9 ? `rgba(255,255,255,${0.82 + hotFlash * 0.18})` : "rgba(212,216,232,0.62)";
+    ctx.fillStyle = sequenceProgress >= 0.9 ? `rgba(255,255,255,${0.82 + coherentGlow * 0.18})` : "rgba(212,216,232,0.62)";
     ctx.fillText("COHERENT", focusX - 28, focusY + 68);
 
     const graphLeft = 28;
@@ -269,13 +276,13 @@ export function CoherenceWarpCore({
     steps.forEach((step, index) => {
       ctx.beginPath();
       ctx.arc(step.x, sequenceY, 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = step.active ? (index >= 2 ? `rgba(255,255,255,${0.72 + arrivalFlash * 0.16 + hotFlash * 0.12})` : baseColor) : "rgba(255,255,255,0.14)";
+      ctx.fillStyle = step.active ? (index >= 2 ? `rgba(255,255,255,${0.72 + clearScreenWhiteout * 0.16 + coherentGlow * 0.12})` : baseColor) : "rgba(255,255,255,0.14)";
       ctx.fill();
       ctx.fillStyle = step.active ? "rgba(255,255,255,0.9)" : "rgba(212,216,232,0.55)";
       ctx.font = "10px 'Courier New', 'Lucida Console', monospace";
       ctx.fillText(step.label, step.x + 10, sequenceY);
     });
-  }, [coherence, foldScore, holdMode, loopProgress, riskScore, sequence.clearScreenFlash, sequence.hotFlash, stability, state.holdBand, state.lockStrength, state.phase, state.projectedCurve, state.targetCoherence, t]);
+  }, [coherence, foldScore, holdMode, loopProgress, riskScore, sequence.clearScreenWhiteout, sequence.coherentGlow, stability, state.holdBand, state.lockStrength, state.phase, state.projectedCurve, state.targetCoherence, t]);
 
   return (
     <div style={{ border: `1px solid ${P.border}`, borderRadius: 12, padding: 14, background: P.panel }}>

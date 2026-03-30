@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Local Corridor",
+    "energy": 0.54,
+    "curvature": 0.57,
+    "coherence": 0.63,
+    "ethics": 0.1,
+    "instability": 0.19,
+    "eta": 0.45,
+    "target": [8, 1, -3]
+  },
+  {
+    "name": "Marginal Distortion",
+    "energy": 0.35,
+    "curvature": 0.31,
+    "coherence": 0.48,
+    "ethics": 0,
+    "instability": 0.44,
+    "eta": 0.12,
+    "target": [10, 2, -4]
+  },
+  {
+    "name": "High Coherence Test",
+    "energy": 0.71,
+    "curvature": 0.69,
+    "coherence": 0.88,
+    "ethics": 0.35,
+    "instability": 0.16,
+    "eta": 0.9,
+    "target": [12, 3, -6]
+  }
+]

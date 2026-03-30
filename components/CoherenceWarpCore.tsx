@@ -43,9 +43,11 @@ export function CoherenceWarpCore({
   const sequenceLabel =
     loopProgress < 0.24
       ? "ENGAGE (INTENTION)"
-      : loopProgress < 0.76
+      : loopProgress < 0.74
         ? "WARP"
-        : "ARRIVAL / CLEAR SCREEN";
+        : loopProgress < 0.9
+          ? "ARRIVAL / CLEAR SCREEN"
+          : "HOT FLASH";
 
   useEffect(() => {
     const canvas = ref.current;
@@ -68,7 +70,8 @@ export function CoherenceWarpCore({
     const chamberHeight = 128;
     const tunnelPulse = Math.sin(t * 4) * 6;
     const sequenceProgress = (t * 0.2 + state.lockStrength * 0.08) % 1;
-    const arrivalFlash = Math.max(0, 1 - Math.abs(sequenceProgress - 0.88) / 0.12);
+    const arrivalFlash = Math.max(0, 1 - Math.abs(sequenceProgress - 0.82) / 0.11);
+    const hotFlash = Math.max(0, 1 - Math.abs(sequenceProgress - 0.95) / 0.05);
     const warpDrift = 0.55 + state.lockStrength * 0.85;
     const baseColor =
       state.phase === "LOCKED"
@@ -103,6 +106,19 @@ export function CoherenceWarpCore({
       ctx.fillRect(0, 0, width, height);
     }
 
+    if (hotFlash > 0.02) {
+      const flashWash = ctx.createRadialGradient(focusX, focusY, 18, focusX, focusY, 320);
+      flashWash.addColorStop(0, `rgba(255,255,255,${0.88 + hotFlash * 0.12})`);
+      flashWash.addColorStop(0.18, `rgba(255,250,236,${0.46 + hotFlash * 0.18})`);
+      flashWash.addColorStop(0.4, `rgba(255,230,168,${hotFlash * 0.22})`);
+      flashWash.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = flashWash;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = `rgba(255,255,255,${hotFlash * 0.12})`;
+      ctx.fillRect(0, 0, width, height);
+    }
+
     for (let ring = 0; ring < 8; ring += 1) {
       const progress = ((ring / 8) + (t * 0.12 * warpDrift)) % 1;
       const radiusX = 34 + progress * 180 + tunnelPulse;
@@ -118,7 +134,7 @@ export function CoherenceWarpCore({
     for (let streak = 0; streak < 28; streak += 1) {
       const seed = streak * 17.173;
       const lane = (Math.sin(seed) * 0.5 + 0.5) * 1.4 - 0.7;
-      const progress = (t * (0.22 + state.lockStrength * 0.4 + arrivalFlash * 0.35) + streak * 0.113) % 1;
+      const progress = (t * (0.22 + state.lockStrength * 0.4 + arrivalFlash * 0.35 + hotFlash * 0.45) + streak * 0.113) % 1;
       const startX = focusX - progress * 300;
       const startY = focusY + lane * (22 + progress * 110);
       const length = 14 + progress * 60 * (0.6 + state.lockStrength);
@@ -167,7 +183,7 @@ export function CoherenceWarpCore({
     ctx.moveTo(chamberX + chamberWidth, focusY);
     ctx.lineTo(focusX - 18, focusY);
     ctx.strokeStyle = beam;
-    ctx.lineWidth = 8 + state.lockStrength * 4 + arrivalFlash * 5;
+    ctx.lineWidth = 8 + state.lockStrength * 4 + arrivalFlash * 5 + hotFlash * 6;
     ctx.stroke();
 
     ctx.beginPath();
@@ -187,17 +203,29 @@ export function CoherenceWarpCore({
       ctx.fill();
     }
 
+    if (hotFlash > 0.02) {
+      ctx.beginPath();
+      ctx.arc(focusX, focusY, 42 + hotFlash * 44, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,248,230,${0.12 + hotFlash * 0.34})`;
+      ctx.fill();
+    }
+
     ctx.font = "700 11px 'Courier New', 'Lucida Console', monospace";
     ctx.textBaseline = "middle";
     ctx.fillStyle = sequenceProgress < 0.24 ? "rgba(255,255,255,0.96)" : "rgba(212,216,232,0.62)";
     ctx.fillText("ENGAGE (INTENTION)", chamberX - 4, chamberY - 18);
     ctx.fillStyle =
-      sequenceProgress >= 0.24 && sequenceProgress < 0.76
+      sequenceProgress >= 0.24 && sequenceProgress < 0.74
         ? "rgba(255,255,255,0.96)"
         : "rgba(212,216,232,0.62)";
     ctx.fillText("WARP", focusX - 20, focusY - 50);
-    ctx.fillStyle = sequenceProgress >= 0.76 ? `rgba(255,255,255,${0.78 + arrivalFlash * 0.22})` : "rgba(212,216,232,0.62)";
+    ctx.fillStyle =
+      sequenceProgress >= 0.74 && sequenceProgress < 0.9
+        ? `rgba(255,255,255,${0.78 + arrivalFlash * 0.22})`
+        : "rgba(212,216,232,0.62)";
     ctx.fillText("ARRIVAL / CLEAR SCREEN", focusX - 80, focusY + 48);
+    ctx.fillStyle = sequenceProgress >= 0.9 ? `rgba(255,255,255,${0.82 + hotFlash * 0.18})` : "rgba(212,216,232,0.62)";
+    ctx.fillText("HOT FLASH", focusX - 30, focusY + 68);
 
     const graphLeft = 28;
     const graphTop = height - 86;
@@ -234,14 +262,15 @@ export function CoherenceWarpCore({
     const sequenceWidth = graphWidth;
     const steps = [
       { label: "ENGAGE", active: sequenceProgress < 0.24, x: sequenceLeft + sequenceWidth * 0.06 },
-      { label: "WARP", active: sequenceProgress >= 0.24 && sequenceProgress < 0.76, x: sequenceLeft + sequenceWidth * 0.42 },
-      { label: "CLEAR", active: sequenceProgress >= 0.76, x: sequenceLeft + sequenceWidth * 0.78 },
+      { label: "WARP", active: sequenceProgress >= 0.24 && sequenceProgress < 0.74, x: sequenceLeft + sequenceWidth * 0.34 },
+      { label: "CLEAR", active: sequenceProgress >= 0.74 && sequenceProgress < 0.9, x: sequenceLeft + sequenceWidth * 0.64 },
+      { label: "FLASH", active: sequenceProgress >= 0.9, x: sequenceLeft + sequenceWidth * 0.84 },
     ];
 
     steps.forEach((step, index) => {
       ctx.beginPath();
       ctx.arc(step.x, sequenceY, 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = step.active ? (index === 2 ? `rgba(255,255,255,${0.75 + arrivalFlash * 0.25})` : baseColor) : "rgba(255,255,255,0.14)";
+      ctx.fillStyle = step.active ? (index >= 2 ? `rgba(255,255,255,${0.72 + arrivalFlash * 0.16 + hotFlash * 0.12})` : baseColor) : "rgba(255,255,255,0.14)";
       ctx.fill();
       ctx.fillStyle = step.active ? "rgba(255,255,255,0.9)" : "rgba(212,216,232,0.55)";
       ctx.font = "10px 'Courier New', 'Lucida Console', monospace";
@@ -253,7 +282,7 @@ export function CoherenceWarpCore({
     <div style={{ border: `1px solid ${P.border}`, borderRadius: 12, padding: 14, background: P.panel }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
         <div style={{ color: P.text, fontWeight: 700, fontSize: 15 }}>Coherence Engine Warp Core</div>
-        <div style={{ color: sequenceLabel === "ARRIVAL / CLEAR SCREEN" ? "#ffffff" : state.phase === "LOCKED" ? P.green : state.phase === "RAMP" ? P.gold : P.glow, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+        <div style={{ color: sequenceLabel === "ARRIVAL / CLEAR SCREEN" || sequenceLabel === "HOT FLASH" ? "#ffffff" : state.phase === "LOCKED" ? P.green : state.phase === "RAMP" ? P.gold : P.glow, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" }}>
           {sequenceLabel}
         </div>
       </div>
@@ -279,7 +308,7 @@ export function CoherenceWarpCore({
       </div>
 
       <div style={{ marginTop: 8, color: P.text, fontFamily: FONT, fontSize: 11, lineHeight: 1.6 }}>
-        Loop: Engage (Intention) - Warp - Arrival / Clear Screen - Re-engage
+        Loop: Engage (Intention) - Warp - Arrival / Clear Screen - Hot Flash - Re-engage
       </div>
     </div>
   );

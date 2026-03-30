@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import presets from "@/data/presets.json";
 import { DeviceHeader } from "@/components/DeviceHeader";
 import { EqBlock } from "@/components/EqBlock";
@@ -56,6 +56,8 @@ const FONT = "'Courier New', 'Lucida Console', monospace";
 const SEQUENCE_READY_PROGRESS = 0.04;
 const SEQUENCE_ACHIEVED_PROGRESS = 0.95;
 const SEQUENCE_DURATION_SECONDS = 5.6;
+const ARRIVAL_MESSAGE_DURATION_MS = 1500;
+const ARRIVAL_TOUCH_GUARD_MS = 240;
 const MODE_LABELS: Record<EngineMode, string> = {
   DECISION: "Decision",
   INTENT: "Intent",
@@ -148,8 +150,36 @@ export default function FoldEnginePage() {
   const [t, setT] = useState(0);
   const [hydrated, setHydrated] = useState(false);
   const [enginePaused, setEnginePaused] = useState(false);
-  const [engageState, setEngageState] = useState<"READY" | "RUNNING" | "ACHIEVED" | "LANDED">("READY");
+  const [engageState, setEngageState] = useState<"READY" | "RUNNING" | "ACHIEVED" | "LANDED" | "ARRIVED">("READY");
   const [engageStartT, setEngageStartT] = useState<number | null>(null);
+  const [landedAtMs, setLandedAtMs] = useState<number | null>(null);
+  const enterLandedState = useCallback(() => {
+    setEngageState("LANDED");
+    setEngageStartT(null);
+    setLandedAtMs(Date.now());
+  }, []);
+  const dismissArrivalHold = useCallback(() => {
+    if (engageState !== "LANDED") {
+      return;
+    }
+
+    if (landedAtMs !== null && Date.now() - landedAtMs < ARRIVAL_TOUCH_GUARD_MS) {
+      return;
+    }
+
+    setEngageState("ARRIVED");
+    setEngageStartT(null);
+    setLandedAtMs(null);
+  }, [engageState, landedAtMs]);
+  const dismissArrivalMessage = useCallback(() => {
+    if (engageState !== "ARRIVED") {
+      return;
+    }
+
+    setEngageState("READY");
+    setEngageStartT(null);
+    setLandedAtMs(null);
+  }, [engageState]);
 
   useEffect(() => {
     if (enginePaused) {
@@ -203,26 +233,50 @@ export default function FoldEnginePage() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setEngageState("LANDED");
+        enterLandedState();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [engageState]);
+  }, [engageState, enterLandedState]);
 
   useEffect(() => {
     if (engageState !== "LANDED") {
       return;
     }
 
-    const id = window.setTimeout(() => {
-      setEngageState("READY");
-      setEngageStartT(null);
-    }, 1800);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        dismissArrivalHold();
+      }
+    };
 
-    return () => window.clearTimeout(id);
-  }, [engageState]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dismissArrivalHold, engageState]);
+
+  useEffect(() => {
+    if (engageState !== "ARRIVED") {
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      dismissArrivalMessage();
+    }, ARRIVAL_MESSAGE_DURATION_MS);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        dismissArrivalMessage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [dismissArrivalMessage, engageState]);
 
   const selectedDecisionOption = useMemo(
     () => decisionOptions.find((option) => option.id === selectedDecisionId) ?? decisionOptions[0],
@@ -278,7 +332,7 @@ export default function FoldEnginePage() {
       );
     }
 
-    if (engageState === "ACHIEVED" || engageState === "LANDED") {
+    if (engageState === "ACHIEVED" || engageState === "LANDED" || engageState === "ARRIVED") {
       return SEQUENCE_ACHIEVED_PROGRESS;
     }
 
@@ -365,9 +419,10 @@ export default function FoldEnginePage() {
   );
 
   const whiteoutActive =
-    engageState === "LANDED" ||
-    (engageState !== "READY" &&
-      (coherenceSequence.stage === "CLEAR" || coherenceSequence.stage === "COHERENT"));
+    engageState !== "LANDED" &&
+    engageState !== "ARRIVED" &&
+    engageState !== "READY" &&
+    (coherenceSequence.stage === "CLEAR" || coherenceSequence.stage === "COHERENT");
   const clearScreenOverlayOpacity = whiteoutActive
     ? 1
     : Math.min(
@@ -388,8 +443,10 @@ export default function FoldEnginePage() {
       : engageState === "RUNNING"
         ? "Sequence in motion. Hold course until state is achieved."
         : engageState === "ACHIEVED"
-          ? "State achieved. Press Esc to land new reality."
-          : "Landing new reality.";
+          ? "State achieved. Press Arrived to continue."
+          : engageState === "LANDED"
+            ? "White hold active. Touch screen or press Esc when ready."
+            : "Arrived.";
 
   const updateManualControl = <K extends keyof EngineControls>(key: K, value: EngineControls[K]) => {
     setSelectedPresetIndex(null);
@@ -837,18 +894,33 @@ export default function FoldEnginePage() {
         padding: 24,
       }}
     >
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "#ffffff",
-          pointerEvents: "none",
-          zIndex: 999,
-          opacity: clearScreenOverlayOpacity,
-          boxShadow: "0 0 320px rgba(255,255,255,0.98), inset 0 0 240px rgba(255,255,255,0.98)",
-        }}
-      />
-      {engageState === "LANDED" && (
+      {engageState === "LANDED" ? (
+        <div
+          onPointerDown={dismissArrivalHold}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#ffffff",
+            pointerEvents: "auto",
+            zIndex: 999,
+            opacity: 1,
+            touchAction: "manipulation",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#ffffff",
+            pointerEvents: "none",
+            zIndex: 999,
+            opacity: clearScreenOverlayOpacity,
+            boxShadow: "0 0 320px rgba(255,255,255,0.98), inset 0 0 240px rgba(255,255,255,0.98)",
+          }}
+        />
+      )}
+      {engageState === "ARRIVED" && (
         <div
           style={{
             position: "fixed",
@@ -856,9 +928,12 @@ export default function FoldEnginePage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            pointerEvents: "none",
+            pointerEvents: "auto",
             zIndex: 1000,
-            color: "#08111a",
+            background:
+              "radial-gradient(circle at center, rgba(255,255,255,0.12) 0%, rgba(14,18,30,0.94) 38%, rgba(3,4,9,0.995) 100%)",
+            color: "#f7fbff",
+            textShadow: "0 0 32px rgba(255,255,255,0.42), 0 0 70px rgba(108,180,255,0.2)",
             fontFamily: FONT,
             fontSize: 28,
             fontWeight: 700,
@@ -867,7 +942,7 @@ export default function FoldEnginePage() {
             textAlign: "center",
           }}
         >
-          Arrival
+          Arrived
         </div>
       )}
       <div
@@ -1066,7 +1141,7 @@ export default function FoldEnginePage() {
                   <button
                     onClick={() => {
                       if (engageState === "ACHIEVED") {
-                        setEngageState("LANDED");
+                        enterLandedState();
                       }
                     }}
                     disabled={engageState !== "ACHIEVED"}
@@ -1082,7 +1157,7 @@ export default function FoldEnginePage() {
                       letterSpacing: "0.06em",
                     }}
                   >
-                    ESC / ARRIVAL
+                    ESC / ARRIVED
                   </button>
                 </div>
 

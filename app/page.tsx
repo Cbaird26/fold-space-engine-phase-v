@@ -706,13 +706,69 @@ export default function FoldEnginePage() {
   };
 
   return (
-    <main style={{ minHeight: "100vh", background: "radial-gradient(circle at top, #111522 0%, #06070c 55%)", color: P.text, fontFamily: FONT, padding: 24 }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at top, rgba(27,42,70,0.95) 0%, rgba(9,12,20,0.98) 42%, #04050a 100%)",
+        color: P.text,
+        fontFamily: FONT,
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1320,
+          margin: "0 auto",
+          border: "1px solid rgba(105,124,182,0.22)",
+          borderRadius: 28,
+          padding: 20,
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015)), radial-gradient(circle at top right, rgba(0,240,255,0.05), rgba(0,0,0,0) 30%)",
+          boxShadow: "0 34px 80px rgba(0,0,0,0.34)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 14%, rgba(255,255,255,0) 86%, rgba(255,255,255,0.03))",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 14,
+            padding: "10px 14px",
+            borderRadius: 14,
+            border: `1px solid ${P.border}`,
+            background: "rgba(5,7,12,0.62)",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", color: P.dim, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            <span>ZoraASI Bridge</span>
+            <span>Viewfinder Link Stable</span>
+            <span>Warp Core Cycle Active</span>
+          </div>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", color: P.dim, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            <span>Mode {MODE_LABELS[mode]}</span>
+            <span>Logs {logs.length}</span>
+          </div>
+        </div>
         <DeviceHeader
           name="Fold-Space Engine"
           subtitle={MODE_SUBTITLES[mode]}
           color={mode === "DECISION" ? P.green : mode === "INTENT" ? P.glow3 : mode === "NAVIGATION" ? P.glow : P.gold}
-          classification="Practical Demo"
+          classification="Bridge Dashboard"
         />
 
         {mode === "RESEARCH" ? (
@@ -733,8 +789,8 @@ export default function FoldEnginePage() {
               key={item.label}
               style={{
                 border: `1px solid ${item.accent}30`,
-                background: `${item.accent}10`,
-                borderRadius: 12,
+                background: `linear-gradient(180deg, ${item.accent}12, rgba(8,9,20,0.88))`,
+                borderRadius: 16,
                 padding: "14px 16px",
                 boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
               }}
@@ -745,19 +801,34 @@ export default function FoldEnginePage() {
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "16px 0 20px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            margin: "16px 0 20px",
+            padding: 12,
+            borderRadius: 16,
+            border: `1px solid ${P.border}`,
+            background: "rgba(7,9,15,0.72)",
+          }}
+        >
           {(Object.keys(MODE_LABELS) as EngineMode[]).map((nextMode) => (
             <button
               key={nextMode}
               onClick={() => setMode(nextMode)}
               style={{
                 border: `1px solid ${mode === nextMode ? P.glow : P.border}`,
-                background: mode === nextMode ? `${P.glow}14` : P.panel,
+                background:
+                  mode === nextMode
+                    ? "linear-gradient(180deg, rgba(0,240,255,0.16), rgba(0,240,255,0.05))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
                 color: mode === nextMode ? P.glow : P.text,
                 padding: "10px 14px",
-                borderRadius: 8,
+                borderRadius: 999,
                 cursor: "pointer",
                 fontFamily: FONT,
+                letterSpacing: "0.04em",
               }}
             >
               {MODE_LABELS[nextMode]}
@@ -765,7 +836,15 @@ export default function FoldEnginePage() {
           ))}
           <button
             onClick={recordRun}
-            style={{ border: `1px solid ${P.gold}`, background: `${P.gold}14`, color: P.gold, padding: "10px 14px", borderRadius: 8, cursor: "pointer", fontFamily: FONT }}
+            style={{
+              border: `1px solid ${P.gold}`,
+              background: "linear-gradient(180deg, rgba(251,191,36,0.16), rgba(251,191,36,0.05))",
+              color: P.gold,
+              padding: "10px 14px",
+              borderRadius: 999,
+              cursor: "pointer",
+              fontFamily: FONT,
+            }}
           >
             Record Run
           </button>
@@ -774,10 +853,13 @@ export default function FoldEnginePage() {
             disabled={logs.length === 0}
             style={{
               border: `1px solid ${logs.length === 0 ? P.border : P.green}`,
-              background: logs.length === 0 ? P.panel : `${P.green}14`,
+              background:
+                logs.length === 0
+                  ? "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))"
+                  : "linear-gradient(180deg, rgba(61,232,168,0.16), rgba(61,232,168,0.05))",
               color: logs.length === 0 ? P.dim : P.green,
               padding: "10px 14px",
-              borderRadius: 8,
+              borderRadius: 999,
               cursor: logs.length === 0 ? "not-allowed" : "pointer",
               fontFamily: FONT,
             }}
@@ -786,9 +868,20 @@ export default function FoldEnginePage() {
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 20, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 20, alignItems: "start", position: "relative", zIndex: 1 }}>
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, alignItems: "start" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: 20,
+                alignItems: "start",
+                padding: 14,
+                borderRadius: 20,
+                border: `1px solid ${P.border}`,
+                background: "rgba(7,9,15,0.62)",
+              }}
+            >
               <div>
                 <FoldField aperture={displayEvaluation.aperture} stability={displayEvaluation.stability} t={t} chosenTarget={displayEvaluation.chosenTarget} />
               </div>

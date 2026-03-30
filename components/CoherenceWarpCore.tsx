@@ -39,6 +39,13 @@ export function CoherenceWarpCore({
     riskScore,
     holdMode,
   });
+  const loopProgress = (t * 0.2 + state.lockStrength * 0.08) % 1;
+  const sequenceLabel =
+    loopProgress < 0.24
+      ? "ENGAGE (INTENTION)"
+      : loopProgress < 0.76
+        ? "WARP"
+        : "ARRIVAL / CLEAR SCREEN";
 
   useEffect(() => {
     const canvas = ref.current;
@@ -53,11 +60,16 @@ export function CoherenceWarpCore({
 
     const width = canvas.width;
     const height = canvas.height;
-    const centerX = width / 2;
-    const centerY = height / 2 - 30;
-    const targetRadius = 42 + state.targetCoherence * 84;
-    const currentRadius = 32 + coherence * 88 + Math.sin(t * 5) * state.lockStrength * 2;
-    const bandRadius = state.holdBand * 120;
+    const focusX = width * 0.72;
+    const focusY = height * 0.42;
+    const chamberX = 64;
+    const chamberY = 54;
+    const chamberWidth = 78;
+    const chamberHeight = 128;
+    const tunnelPulse = Math.sin(t * 4) * 6;
+    const sequenceProgress = (t * 0.2 + state.lockStrength * 0.08) % 1;
+    const arrivalFlash = Math.max(0, 1 - Math.abs(sequenceProgress - 0.88) / 0.12);
+    const warpDrift = 0.55 + state.lockStrength * 0.85;
     const baseColor =
       state.phase === "LOCKED"
         ? P.green
@@ -66,58 +78,126 @@ export function CoherenceWarpCore({
           : P.glow;
 
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#05060a";
+    const backdrop = ctx.createLinearGradient(0, 0, width, height);
+    backdrop.addColorStop(0, "#04060d");
+    backdrop.addColorStop(0.45, "#07111c");
+    backdrop.addColorStop(1, "#030409");
+    ctx.fillStyle = backdrop;
     ctx.fillRect(0, 0, width, height);
 
-    const radial = ctx.createRadialGradient(centerX, centerY, 18, centerX, centerY, targetRadius + 40);
-    radial.addColorStop(0, "rgba(0,240,255,0.16)");
-    radial.addColorStop(0.4, "rgba(179,116,255,0.10)");
-    radial.addColorStop(1, "rgba(5,6,10,0)");
-    ctx.fillStyle = radial;
+    const tunnelGlow = ctx.createRadialGradient(focusX, focusY, 18, focusX, focusY, 220);
+    tunnelGlow.addColorStop(0, `${baseColor}33`);
+    tunnelGlow.addColorStop(0.35, "rgba(0,240,255,0.14)");
+    tunnelGlow.addColorStop(0.7, "rgba(179,116,255,0.08)");
+    tunnelGlow.addColorStop(1, "rgba(5,6,10,0)");
+    ctx.fillStyle = tunnelGlow;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, targetRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `${baseColor}55`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    if (arrivalFlash > 0.02) {
+      const arrivalWash = ctx.createRadialGradient(focusX, focusY, 12, focusX, focusY, 260);
+      arrivalWash.addColorStop(0, `rgba(255,255,255,${0.65 + arrivalFlash * 0.25})`);
+      arrivalWash.addColorStop(0.25, `rgba(255,255,255,${0.15 + arrivalFlash * 0.18})`);
+      arrivalWash.addColorStop(0.55, `rgba(201,240,255,${arrivalFlash * 0.1})`);
+      arrivalWash.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = arrivalWash;
+      ctx.fillRect(0, 0, width, height);
+    }
 
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, targetRadius - bandRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `${baseColor}22`;
-    ctx.lineWidth = 5;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, targetRadius + bandRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `${baseColor}22`;
-    ctx.lineWidth = 5;
-    ctx.stroke();
-
-    for (let ring = 0; ring < 3; ring += 1) {
-      const orbitRadius = currentRadius + ring * 20 + Math.sin(t * (2 + ring)) * 4;
+    for (let ring = 0; ring < 8; ring += 1) {
+      const progress = ((ring / 8) + (t * 0.12 * warpDrift)) % 1;
+      const radiusX = 34 + progress * 180 + tunnelPulse;
+      const radiusY = 14 + progress * 72 + tunnelPulse * 0.35;
+      const alpha = 0.08 + (1 - progress) * 0.2;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = ring === 0 ? "rgba(0,240,255,0.35)" : ring === 1 ? "rgba(179,116,255,0.25)" : "rgba(61,232,168,0.18)";
-      ctx.lineWidth = 1;
+      ctx.ellipse(focusX, focusY, radiusX, radiusY, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = state.phase === "LOCKED" ? `rgba(61,232,168,${alpha})` : `rgba(0,240,255,${alpha})`;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
 
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 28 + state.lockStrength * 12, 0, Math.PI * 2);
-    const core = ctx.createRadialGradient(centerX, centerY, 4, centerX, centerY, 42);
-    core.addColorStop(0, "rgba(255,255,255,0.95)");
-    core.addColorStop(0.25, "rgba(0,240,255,0.92)");
-    core.addColorStop(0.7, "rgba(179,116,255,0.35)");
-    core.addColorStop(1, "rgba(179,116,255,0)");
-    ctx.fillStyle = core;
-    ctx.fill();
+    for (let streak = 0; streak < 28; streak += 1) {
+      const seed = streak * 17.173;
+      const lane = (Math.sin(seed) * 0.5 + 0.5) * 1.4 - 0.7;
+      const progress = (t * (0.22 + state.lockStrength * 0.4 + arrivalFlash * 0.35) + streak * 0.113) % 1;
+      const startX = focusX - progress * 300;
+      const startY = focusY + lane * (22 + progress * 110);
+      const length = 14 + progress * 60 * (0.6 + state.lockStrength);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(startX - length, startY + lane * 6);
+      ctx.strokeStyle = streak % 3 === 0 ? "rgba(255,255,255,0.55)" : streak % 2 === 0 ? "rgba(0,240,255,0.42)" : "rgba(179,116,255,0.28)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "rgba(9,12,22,0.95)";
+    ctx.fillRect(chamberX, chamberY, chamberWidth, chamberHeight);
+    ctx.strokeStyle = "rgba(179,116,255,0.4)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(chamberX, chamberY, chamberWidth, chamberHeight);
+
+    const plasma = ctx.createLinearGradient(chamberX + chamberWidth / 2, chamberY, chamberX + chamberWidth / 2, chamberY + chamberHeight);
+    plasma.addColorStop(0, "rgba(179,116,255,0)");
+    plasma.addColorStop(0.2, "rgba(179,116,255,0.5)");
+    plasma.addColorStop(0.5, "rgba(0,240,255,0.95)");
+    plasma.addColorStop(0.8, "rgba(179,116,255,0.5)");
+    plasma.addColorStop(1, "rgba(179,116,255,0)");
+    ctx.fillStyle = plasma;
+    ctx.fillRect(chamberX + 30, chamberY + 8, 18, chamberHeight - 16);
 
     ctx.beginPath();
-    ctx.arc(centerX, centerY, currentRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * coherence);
-    ctx.strokeStyle = baseColor;
-    ctx.lineWidth = 4;
+    ctx.moveTo(chamberX + chamberWidth, focusY - 30);
+    ctx.quadraticCurveTo(focusX - 88, focusY - 44 - state.holdBand * 120, width - 34, focusY - 18);
+    ctx.strokeStyle = "rgba(0,240,255,0.28)";
+    ctx.lineWidth = 3;
     ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(chamberX + chamberWidth, focusY + 30);
+    ctx.quadraticCurveTo(focusX - 88, focusY + 44 + state.holdBand * 120, width - 34, focusY + 18);
+    ctx.strokeStyle = "rgba(0,240,255,0.28)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    const beam = ctx.createLinearGradient(chamberX + chamberWidth, focusY, focusX - 16, focusY);
+    beam.addColorStop(0, "rgba(0,240,255,0.85)");
+    beam.addColorStop(0.35, "rgba(179,116,255,0.55)");
+    beam.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.beginPath();
+    ctx.moveTo(chamberX + chamberWidth, focusY);
+    ctx.lineTo(focusX - 18, focusY);
+    ctx.strokeStyle = beam;
+    ctx.lineWidth = 8 + state.lockStrength * 4 + arrivalFlash * 5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(focusX, focusY, 18 + state.lockStrength * 9, 0, Math.PI * 2);
+    const focusCore = ctx.createRadialGradient(focusX, focusY, 2, focusX, focusY, 36);
+    focusCore.addColorStop(0, "rgba(255,255,255,0.98)");
+    focusCore.addColorStop(0.35, "rgba(0,240,255,0.9)");
+    focusCore.addColorStop(0.7, `${baseColor}88`);
+    focusCore.addColorStop(1, `${baseColor}00`);
+    ctx.fillStyle = focusCore;
+    ctx.fill();
+
+    if (arrivalFlash > 0.02) {
+      ctx.beginPath();
+      ctx.arc(focusX, focusY, 24 + arrivalFlash * 30, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.08 + arrivalFlash * 0.32})`;
+      ctx.fill();
+    }
+
+    ctx.font = "700 11px 'Courier New', 'Lucida Console', monospace";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = sequenceProgress < 0.24 ? "rgba(255,255,255,0.96)" : "rgba(212,216,232,0.62)";
+    ctx.fillText("ENGAGE (INTENTION)", chamberX - 4, chamberY - 18);
+    ctx.fillStyle =
+      sequenceProgress >= 0.24 && sequenceProgress < 0.76
+        ? "rgba(255,255,255,0.96)"
+        : "rgba(212,216,232,0.62)";
+    ctx.fillText("WARP", focusX - 20, focusY - 50);
+    ctx.fillStyle = sequenceProgress >= 0.76 ? `rgba(255,255,255,${0.78 + arrivalFlash * 0.22})` : "rgba(212,216,232,0.62)";
+    ctx.fillText("ARRIVAL / CLEAR SCREEN", focusX - 80, focusY + 48);
 
     const graphLeft = 28;
     const graphTop = height - 86;
@@ -148,14 +228,33 @@ export function CoherenceWarpCore({
     ctx.strokeStyle = P.glow;
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    const sequenceY = graphTop - 18;
+    const sequenceLeft = graphLeft;
+    const sequenceWidth = graphWidth;
+    const steps = [
+      { label: "ENGAGE", active: sequenceProgress < 0.24, x: sequenceLeft + sequenceWidth * 0.06 },
+      { label: "WARP", active: sequenceProgress >= 0.24 && sequenceProgress < 0.76, x: sequenceLeft + sequenceWidth * 0.42 },
+      { label: "CLEAR", active: sequenceProgress >= 0.76, x: sequenceLeft + sequenceWidth * 0.78 },
+    ];
+
+    steps.forEach((step, index) => {
+      ctx.beginPath();
+      ctx.arc(step.x, sequenceY, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = step.active ? (index === 2 ? `rgba(255,255,255,${0.75 + arrivalFlash * 0.25})` : baseColor) : "rgba(255,255,255,0.14)";
+      ctx.fill();
+      ctx.fillStyle = step.active ? "rgba(255,255,255,0.9)" : "rgba(212,216,232,0.55)";
+      ctx.font = "10px 'Courier New', 'Lucida Console', monospace";
+      ctx.fillText(step.label, step.x + 10, sequenceY);
+    });
   }, [coherence, foldScore, holdMode, riskScore, stability, state.holdBand, state.lockStrength, state.phase, state.projectedCurve, state.targetCoherence, t]);
 
   return (
     <div style={{ border: `1px solid ${P.border}`, borderRadius: 12, padding: 14, background: P.panel }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
         <div style={{ color: P.text, fontWeight: 700, fontSize: 15 }}>Coherence Engine Warp Core</div>
-        <div style={{ color: state.phase === "LOCKED" ? P.green : state.phase === "RAMP" ? P.gold : P.glow, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          {state.phase}
+        <div style={{ color: sequenceLabel === "ARRIVAL / CLEAR SCREEN" ? "#ffffff" : state.phase === "LOCKED" ? P.green : state.phase === "RAMP" ? P.gold : P.glow, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          {sequenceLabel}
         </div>
       </div>
 
@@ -177,6 +276,10 @@ export function CoherenceWarpCore({
 
       <div style={{ marginTop: 12, color: P.dim, fontFamily: FONT, fontSize: 12, lineHeight: 1.7 }}>
         {state.guidance}
+      </div>
+
+      <div style={{ marginTop: 8, color: P.text, fontFamily: FONT, fontSize: 11, lineHeight: 1.6 }}>
+        Loop: Engage (Intention) - Warp - Arrival / Clear Screen - Re-engage
       </div>
     </div>
   );

@@ -314,7 +314,7 @@ export function CoherenceWarpCore({
       </div>
 
       <div style={{ marginTop: 8, color: P.text, fontFamily: FONT, fontSize: 11, lineHeight: 1.6 }}>
-        Loop: Engage (Intention) - Warp - Arrival / Clear Screen - Coherent - Re-engage
+        Loop: Engage (Intention) - Warp - Arival / Clear Screen - Coherent - Re-engage
       </div>
     </div>
   );

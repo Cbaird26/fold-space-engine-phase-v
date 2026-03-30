@@ -42,7 +42,7 @@ export function computeCoherenceSequence({
       : stage === "WARP"
         ? "WARP"
         : stage === "CLEAR"
-          ? "ARRIVED / CLEAR SCREEN"
+          ? "ARRIVAL / CLEAR SCREEN"
           : "COHERENT";
   const clearScreenWhiteout = Math.max(0, 1 - Math.abs(loopProgress - 0.82) / 0.11);
   const coherentGlow = Math.max(0, 1 - Math.abs(loopProgress - 0.95) / 0.05);

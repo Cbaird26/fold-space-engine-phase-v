@@ -147,13 +147,18 @@ export default function FoldEnginePage() {
   const [logs, setLogs] = useState<LoggedRun[]>([]);
   const [t, setT] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  const [enginePaused, setEnginePaused] = useState(false);
   const [engageState, setEngageState] = useState<"READY" | "RUNNING" | "ACHIEVED" | "LANDED">("READY");
   const [engageStartT, setEngageStartT] = useState<number | null>(null);
 
   useEffect(() => {
+    if (enginePaused) {
+      return;
+    }
+
     const id = setInterval(() => setT((previous) => previous + 0.03), 30);
     return () => clearInterval(id);
-  }, []);
+  }, [enginePaused]);
 
   useEffect(() => {
     const persisted = loadPersistedProductState();
@@ -374,7 +379,11 @@ export default function FoldEnginePage() {
       );
 
   const engageStatusText =
-    engageState === "READY"
+    enginePaused && engageState === "RUNNING"
+      ? "Engine paused in Hold Until Fold-State. Press Engage to resume the sequence."
+      : enginePaused
+        ? "Engine paused. Press Engage to start the sequence."
+        : engageState === "READY"
       ? "Console ready. Press Engage to start the sequence."
       : engageState === "RUNNING"
         ? "Sequence in motion. Hold course until state is achieved."
@@ -1034,13 +1043,16 @@ export default function FoldEnginePage() {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   <button
                     onClick={() => {
-                      setEngageState("RUNNING");
-                      setEngageStartT(t);
+                      setEnginePaused(false);
+                      if (engageState === "READY") {
+                        setEngageState("RUNNING");
+                        setEngageStartT(t);
+                      }
                     }}
                     style={{
-                      border: `1px solid ${engageState === "RUNNING" ? P.green : P.glow}`,
-                      background: engageState === "RUNNING" ? `${P.green}16` : `${P.glow}14`,
-                      color: engageState === "RUNNING" ? P.green : P.glow,
+                      border: `1px solid ${engageState === "RUNNING" && !enginePaused ? P.green : P.glow}`,
+                      background: engageState === "RUNNING" && !enginePaused ? `${P.green}16` : `${P.glow}14`,
+                      color: engageState === "RUNNING" && !enginePaused ? P.green : P.glow,
                       padding: "9px 12px",
                       borderRadius: 8,
                       cursor: "pointer",
@@ -1049,7 +1061,7 @@ export default function FoldEnginePage() {
                       letterSpacing: "0.06em",
                     }}
                   >
-                    {engageState === "RUNNING" ? "ENGAGE IN MOTION" : "ENGAGE!"}
+                    {enginePaused && engageState === "RUNNING" ? "RESUME ENGAGE" : engageState === "RUNNING" ? "ENGAGE IN MOTION" : "ENGAGE!"}
                   </button>
                   <button
                     onClick={() => {
@@ -1085,7 +1097,12 @@ export default function FoldEnginePage() {
                   ] as Array<{ id: CoherenceHoldMode; label: string }>).map((option) => (
                     <button
                       key={option.id}
-                      onClick={() => setCoherenceHoldMode(option.id)}
+                      onClick={() => {
+                        setCoherenceHoldMode(option.id);
+                        if (option.id === "ARRIVAL") {
+                          setEnginePaused(true);
+                        }
+                      }}
                       style={{
                         border: `1px solid ${coherenceHoldMode === option.id ? P.gold : P.border}`,
                         background: coherenceHoldMode === option.id ? `${P.gold}14` : P.panel,

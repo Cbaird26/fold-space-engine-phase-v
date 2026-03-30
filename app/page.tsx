@@ -298,9 +298,12 @@ export default function FoldEnginePage() {
     [coherenceCoreState.lockStrength, t],
   );
 
-  const clearScreenOverlayOpacity = Math.max(
-    coherenceSequence.clearScreenFlash * 0.94,
-    coherenceSequence.hotFlash * 0.98,
+  const clearScreenOverlayOpacity = Math.min(
+    1,
+    Math.max(
+      coherenceSequence.clearScreenFlash * 2.8,
+      coherenceSequence.hotFlash * 4.2,
+    ),
   );
 
   const updateManualControl = <K extends keyof EngineControls>(key: K, value: EngineControls[K]) => {
@@ -753,10 +756,13 @@ export default function FoldEnginePage() {
         style={{
           position: "fixed",
           inset: 0,
-          background: `rgba(255,255,255,${clearScreenOverlayOpacity.toFixed(3)})`,
+          background:
+            "radial-gradient(circle at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.995) 24%, rgba(255,255,255,0.985) 52%, rgba(255,255,255,0.965) 100%)",
           pointerEvents: "none",
           zIndex: 999,
           opacity: clearScreenOverlayOpacity,
+          boxShadow: "0 0 320px rgba(255,255,255,0.98), inset 0 0 240px rgba(255,255,255,0.98)",
+          mixBlendMode: "screen",
         }}
       />
       <div

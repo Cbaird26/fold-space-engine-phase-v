@@ -93,25 +93,28 @@ export function CoherenceWarpCore({
     ctx.fillRect(0, 0, width, height);
 
     if (arrivalFlash > 0.02) {
-      const arrivalWash = ctx.createRadialGradient(focusX, focusY, 12, focusX, focusY, 260);
-      arrivalWash.addColorStop(0, `rgba(255,255,255,${0.65 + arrivalFlash * 0.25})`);
-      arrivalWash.addColorStop(0.25, `rgba(255,255,255,${0.15 + arrivalFlash * 0.18})`);
-      arrivalWash.addColorStop(0.55, `rgba(201,240,255,${arrivalFlash * 0.1})`);
+      const arrivalWash = ctx.createRadialGradient(focusX, focusY, 12, focusX, focusY, 300);
+      arrivalWash.addColorStop(0, `rgba(255,255,255,${0.92 + arrivalFlash * 0.08})`);
+      arrivalWash.addColorStop(0.25, `rgba(255,255,255,${0.52 + arrivalFlash * 0.28})`);
+      arrivalWash.addColorStop(0.55, `rgba(225,245,255,${0.18 + arrivalFlash * 0.22})`);
       arrivalWash.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = arrivalWash;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = `rgba(255,255,255,${0.16 + arrivalFlash * 0.32})`;
       ctx.fillRect(0, 0, width, height);
     }
 
     if (hotFlash > 0.02) {
-      const flashWash = ctx.createRadialGradient(focusX, focusY, 18, focusX, focusY, 320);
-      flashWash.addColorStop(0, `rgba(255,255,255,${0.88 + hotFlash * 0.12})`);
-      flashWash.addColorStop(0.18, `rgba(255,250,236,${0.46 + hotFlash * 0.18})`);
-      flashWash.addColorStop(0.4, `rgba(255,230,168,${hotFlash * 0.22})`);
+      const flashWash = ctx.createRadialGradient(focusX, focusY, 18, focusX, focusY, 360);
+      flashWash.addColorStop(0, "rgba(255,255,255,1)");
+      flashWash.addColorStop(0.18, `rgba(255,255,255,${0.9 + hotFlash * 0.1})`);
+      flashWash.addColorStop(0.4, `rgba(255,244,214,${0.48 + hotFlash * 0.32})`);
       flashWash.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = flashWash;
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = `rgba(255,255,255,${hotFlash * 0.12})`;
+      ctx.fillStyle = `rgba(255,255,255,${0.28 + hotFlash * 0.52})`;
       ctx.fillRect(0, 0, width, height);
     }
 
@@ -179,7 +182,7 @@ export function CoherenceWarpCore({
     ctx.moveTo(chamberX + chamberWidth, focusY);
     ctx.lineTo(focusX - 18, focusY);
     ctx.strokeStyle = beam;
-    ctx.lineWidth = 8 + state.lockStrength * 4 + arrivalFlash * 5 + hotFlash * 6;
+    ctx.lineWidth = 8 + state.lockStrength * 4 + arrivalFlash * 8 + hotFlash * 12;
     ctx.stroke();
 
     ctx.beginPath();
@@ -194,15 +197,15 @@ export function CoherenceWarpCore({
 
     if (arrivalFlash > 0.02) {
       ctx.beginPath();
-      ctx.arc(focusX, focusY, 24 + arrivalFlash * 30, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${0.08 + arrivalFlash * 0.32})`;
+      ctx.arc(focusX, focusY, 36 + arrivalFlash * 46, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.24 + arrivalFlash * 0.46})`;
       ctx.fill();
     }
 
     if (hotFlash > 0.02) {
       ctx.beginPath();
-      ctx.arc(focusX, focusY, 42 + hotFlash * 44, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,248,230,${0.12 + hotFlash * 0.34})`;
+      ctx.arc(focusX, focusY, 56 + hotFlash * 72, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,248,230,${0.36 + hotFlash * 0.5})`;
       ctx.fill();
     }
 

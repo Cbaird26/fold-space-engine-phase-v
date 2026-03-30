@@ -11,7 +11,7 @@ export function ConstraintPanel({ constraints }: { constraints: ConstraintReport
       <div><strong>ENERGY:</strong> {constraints.energyBudgetPass ? "PASS" : "LOW"}</div>
       <div><strong>COHERENCE WINDOW:</strong> {constraints.coherenceWindowPass ? "PASS" : "OUT OF RANGE"}</div>
       <div><strong>RETURN PATH:</strong> {constraints.returnPathAvailable ? "YES" : "NO"}</div>
-      <div><strong>RISK:</strong> {(constraints.riskScore * 100).toFixed(1)}%</div>
+      <div><strong>INSTABILITY RISK:</strong> {(constraints.riskScore * 100).toFixed(1)}%</div>
     </GlowBox>
   );
 }

@@ -1,4 +1,8 @@
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const normalizedHash = (seed: number) => {
+  const raw = Math.sin(seed) * 43758.5453123;
+  return raw - Math.floor(raw);
+};
 
 export function computeFoldScoreExtended({
   curvature,
@@ -44,11 +48,15 @@ export function computeFoldCost({
 }
 
 export function generateCandidates(target: [number, number, number], n = 24) {
-  return Array.from({ length: n }, () => ({
-    offset: [
-      target[0] + (Math.random() - 0.5) * 2,
-      target[1] + (Math.random() - 0.5) * 2,
-      target[2] + (Math.random() - 0.5) * 2,
-    ] as [number, number, number],
-  }));
+  return Array.from({ length: n }, (_, index) => {
+    const seed = target[0] * 12.9898 + target[1] * 78.233 + target[2] * 37.719 + index * 19.19;
+
+    return {
+      offset: [
+        target[0] + (normalizedHash(seed) - 0.5) * 2,
+        target[1] + (normalizedHash(seed + 1.234) - 0.5) * 2,
+        target[2] + (normalizedHash(seed + 2.468) - 0.5) * 2,
+      ] as [number, number, number],
+    };
+  });
 }

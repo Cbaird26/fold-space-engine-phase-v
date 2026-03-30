@@ -1,15 +1,15 @@
 # Fold-Space Engine
 
-Fold-Space Engine is a constrained simulation framework for exploring effective spacetime deformation, coherence-weighted path selection, and measurement-facing visibility suppression mappings.
+Fold-Space Engine is a constrained future-comparison and fold-space simulation interface. The live app now leads with practical decision and intent flows, while preserving navigation and research surfaces for deeper technical use.
 
 Live site:
 
 - https://cbaird26.github.io/fold-space-engine-phase-v/
 
 ## What this project is
-- A computational simulation environment
-- A research-facing visualization system
-- A bridge between speculative field models and explicit parameterized outputs
+- A practical future-viability interface with `Decision`, `Intent`, `Navigation`, and `Research` modes
+- A computational simulation environment built on constrained field-style scoring
+- A bridge between guided user inputs and explicit parameterized engine outputs
 - A tool for generating reproducible runs and exclusion-oriented experiment mappings
 
 ## What this project is not
@@ -40,6 +40,13 @@ V / V0 = exp(-Γ T Δx²)
 
 ## Scientific stance
 This repository is designed to invite falsification. If the experimental mapping produces no excess dephasing or no measurable visibility deviation within defined bounds, the relevant parameter region is constrained or excluded.
+
+## Current live surface
+- `Decision` mode is the default entry and compares multiple options under shared constraints
+- `Intent` mode maps one outcome into a viability profile with optional raw overrides
+- `Navigation` mode preserves destination-vector and corridor-style exploration
+- `Research` mode keeps the raw controls, quick sweep, logging, and experiment-facing outputs visible
+- Practical labels such as `Future Viability`, `Coherence Stability`, `Instability Risk`, and `Experimental Visibility` sit on top of the same mathematical core
 
 ## Source lineage
 - Seed scaffold: `~/Downloads/fold-space-engine-phase-v`
@@ -90,11 +97,6 @@ fold-space-engine-phase-v/
 npm install
 npm run dev
 ```
-
-## Current live surface
-- Public Next.js static-export site hosted on GitHub Pages
-- Interactive fold field, parameter controls, presets, run logging, and JSON export
-- Constraint, visibility, and quick sweep panels exposed in the first-screen experience
 
 ## Deploy
 

@@ -55,4 +55,10 @@ describe("engineCore", () => {
     expect(candidates).toHaveLength(8);
     expect(candidates.every((candidate) => candidate.offset.length === 3)).toBe(true);
   });
+
+  it("generates stable candidates for the same target", () => {
+    const first = generateCandidates([10, 2, -4], 4);
+    const second = generateCandidates([10, 2, -4], 4);
+    expect(second).toEqual(first);
+  });
 });

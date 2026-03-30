@@ -16,8 +16,9 @@ export function EngineLog({ logs }: { logs: LoggedRun[] }) {
         ) : logs.slice().reverse().map((log, idx) => (
           <div key={idx} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: `1px dashed ${P.border}` }}>
             <div>{log.timestamp} — {log.mode}</div>
-            <div>Score {log.outputs.foldScore.toFixed(3)} | {log.outputs.foldClass}</div>
-            <div>Visibility {log.outputs.visibility.toFixed(6)} | Risk {(log.constraints.riskScore * 100).toFixed(1)}%</div>
+            <div>{log.label}</div>
+            <div>Future Viability {(log.outputs.foldScore * 100).toFixed(1)}% | {log.outputs.foldClass}</div>
+            <div>Experimental Visibility {log.outputs.visibility.toFixed(6)} | Risk {(log.constraints.riskScore * 100).toFixed(1)}%</div>
           </div>
         ))}
       </div>

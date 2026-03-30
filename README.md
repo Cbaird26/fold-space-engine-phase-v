@@ -1,7 +1,6 @@
-# Fold-Space Engine — Phase V
+# Fold-Space Engine
 
 Fold-Space Engine is a constrained simulation framework for exploring effective spacetime deformation, coherence-weighted path selection, and measurement-facing visibility suppression mappings.
-This workspace is the private incubator track for the public Fold-Space Engine demo repo.
 
 ## What this project is
 - A computational simulation environment
@@ -41,7 +40,7 @@ This repository is designed to invite falsification. If the experimental mapping
 ## Source lineage
 - Seed scaffold: `~/Downloads/fold-space-engine-phase-v`
 - Monolithic ancestor: `~/Downloads/mqgt-speculative-lab.jsx`
-- Public demo surface remains separate and intentionally smaller in scope
+- Evolved from a smaller public demo surface into a larger research-facing build
 
 ## Project layout
 
@@ -86,4 +85,14 @@ fold-space-engine-phase-v/
 ```bash
 npm install
 npm run dev
+```
+
+## Deploy
+
+This repo is configured for GitHub Pages via Next.js static export.
+
+Expected live URL:
+
+```text
+https://cbaird26.github.io/fold-space-engine-phase-v/
 ```

@@ -26,6 +26,11 @@ const P = {
   green: "#3de8a8", text: "#d4d8e8", dim: "#8890b0",
 };
 const FONT = "'Courier New', 'Lucida Console', monospace";
+const MODE_LABELS: Record<FoldMode, string> = {
+  SIM: "Simulation",
+  RES: "Research",
+  EXP: "Experimental",
+};
 
 export default function FoldEnginePage() {
   const presetList = presets as Preset[];
@@ -138,10 +143,10 @@ export default function FoldEnginePage() {
     <main style={{ minHeight: "100vh", background: "radial-gradient(circle at top, #111522 0%, #06070c 55%)", color: P.text, fontFamily: FONT, padding: 24 }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         <DeviceHeader
-          name="Fold-Space Engine — Phase V"
-          subtitle="Constrained spacetime deformation simulator with coherence-weighted path selection and interferometric exclusion mapping"
+          name="Fold-Space Engine"
+          subtitle="Constrained fold-space simulation with coherence-weighted path selection and visibility mapping"
           color={P.glow}
-          classification="Research Scaffold"
+          classification="Constrained Demo"
         />
 
         <EqBlock>{"F = αK + βρ + χΦc + ε(Φc·E) − δI"}</EqBlock>
@@ -163,7 +168,7 @@ export default function FoldEnginePage() {
                 fontFamily: FONT,
               }}
             >
-              {m}
+              {MODE_LABELS[m]}
             </button>
           ))}
           <button
@@ -185,7 +190,7 @@ export default function FoldEnginePage() {
               fontFamily: FONT,
             }}
           >
-            Export Logs
+            Export JSON Logs
           </button>
         </div>
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Fold-Space Engine — Phase V",
-  description: "A constrained simulation framework for fold-space concepts under explicit field, geometry, and measurement assumptions.",
+  title: "Fold-Space Engine",
+  description: "A constrained fold-space simulation demo for field geometry, path selection, and visibility mapping.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

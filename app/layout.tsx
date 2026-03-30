@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Fold-Space Engine",
-  description: "A constrained fold-space simulation demo for field geometry, path selection, and visibility mapping.",
+  description: "A constrained future-comparison and fold-space simulation interface with decision, intent, navigation, and research modes.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

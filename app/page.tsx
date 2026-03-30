@@ -134,7 +134,7 @@ export default function FoldEnginePage() {
   const [manualControls, setManualControls] = useState<EngineControls>(DEFAULT_MANUAL_CONTROLS);
   const [selectedPresetIndex, setSelectedPresetIndex] = useState<number | null>(null);
   const [decisionOptions, setDecisionOptions] = useState<DecisionOption[]>(DEFAULT_DECISION_OPTIONS);
-  const [selectedDecisionId, setSelectedDecisionId] = useState(DEFAULT_DECISION_OPTIONS[0].id);
+  const [selectedDecisionId, setSelectedDecisionId] = useState(DEFAULT_DECISION_OPTIONS[2].id);
   const [intentScenario, setIntentScenario] = useState<IntentScenario>(DEFAULT_INTENT_SCENARIO);
   const [advancedOpen, setAdvancedOpen] = useState({ decision: false, intent: false });
   const [logs, setLogs] = useState<LoggedRun[]>([]);

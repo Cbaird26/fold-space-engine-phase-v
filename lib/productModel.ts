@@ -32,30 +32,30 @@ export const DEFAULT_DECISION_OPTIONS: DecisionOption[] = [
     id: "option-a",
     name: "Option A",
     inputs: {
-      alignment: 0.66,
-      complexity: 0.45,
-      timeHorizon: 0.35,
-      stability: 0.78,
+      alignment: 0.72,
+      complexity: 0.48,
+      timeHorizon: 0.4,
+      stability: 0.79,
     },
   },
   {
     id: "option-b",
     name: "Option B",
     inputs: {
-      alignment: 0.56,
-      complexity: 0.62,
-      timeHorizon: 0.54,
-      stability: 0.61,
+      alignment: 0.58,
+      complexity: 0.66,
+      timeHorizon: 0.58,
+      stability: 0.63,
     },
   },
   {
     id: "option-c",
     name: "Option C",
     inputs: {
-      alignment: 0.74,
-      complexity: 0.7,
-      timeHorizon: 0.72,
-      stability: 0.52,
+      alignment: 0.96,
+      complexity: 0.92,
+      timeHorizon: 0.88,
+      stability: 0.94,
     },
   },
 ];
@@ -63,10 +63,10 @@ export const DEFAULT_DECISION_OPTIONS: DecisionOption[] = [
 export const DEFAULT_INTENT_SCENARIO: IntentScenario = {
   label: "Target Outcome",
   inputs: {
-    alignment: 0.68,
-    complexity: 0.5,
-    timeHorizon: 0.45,
-    stability: 0.72,
+    alignment: 0.78,
+    complexity: 0.56,
+    timeHorizon: 0.52,
+    stability: 0.84,
   },
 };
 

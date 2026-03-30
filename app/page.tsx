@@ -13,6 +13,7 @@ import { ExperimentPanel } from "@/components/ExperimentPanel";
 import { EngineLog } from "@/components/EngineLog";
 import { ParameterSweepPanel } from "@/components/ParameterSweepPanel";
 import { serializeRunArchive } from "@/lib/logging";
+import { computeCoherenceSequence, computeCoherenceWarpCore } from "@/lib/coherenceEngine";
 import {
   DEFAULT_DECISION_OPTIONS,
   DEFAULT_INTENT_SCENARIO,
@@ -269,6 +270,38 @@ export default function FoldEnginePage() {
 
     return cards;
   }, [coherenceHoldMode, displayEvaluation, intentScenario.label, manualControls.target, mode, selectedDecisionEvaluation, winningDecision]);
+
+  const coherenceCoreState = useMemo(
+    () =>
+      computeCoherenceWarpCore({
+        coherence: displayEvaluation.params.coherence,
+        stability: displayEvaluation.stability,
+        foldScore: displayEvaluation.foldScore,
+        riskScore: displayEvaluation.constraints.riskScore,
+        holdMode: coherenceHoldMode,
+      }),
+    [
+      coherenceHoldMode,
+      displayEvaluation.constraints.riskScore,
+      displayEvaluation.foldScore,
+      displayEvaluation.params.coherence,
+      displayEvaluation.stability,
+    ],
+  );
+
+  const coherenceSequence = useMemo(
+    () =>
+      computeCoherenceSequence({
+        lockStrength: coherenceCoreState.lockStrength,
+        t,
+      }),
+    [coherenceCoreState.lockStrength, t],
+  );
+
+  const clearScreenOverlayOpacity = Math.max(
+    coherenceSequence.clearScreenFlash * 0.94,
+    coherenceSequence.hotFlash * 0.98,
+  );
 
   const updateManualControl = <K extends keyof EngineControls>(key: K, value: EngineControls[K]) => {
     setSelectedPresetIndex(null);
@@ -716,6 +749,16 @@ export default function FoldEnginePage() {
         padding: 24,
       }}
     >
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: `rgba(255,255,255,${clearScreenOverlayOpacity.toFixed(3)})`,
+          pointerEvents: "none",
+          zIndex: 999,
+          opacity: clearScreenOverlayOpacity,
+        }}
+      />
       <div
         style={{
           maxWidth: 1320,

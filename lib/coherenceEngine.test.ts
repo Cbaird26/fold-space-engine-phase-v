@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeCoherenceWarpCore } from "./coherenceEngine";
+import { computeCoherenceSequence, computeCoherenceWarpCore } from "./coherenceEngine";
 
 describe("coherence warp core", () => {
   it("returns bounded coherence targets and curve values", () => {
@@ -28,5 +28,21 @@ describe("coherence warp core", () => {
 
     expect(state.phase).toBe("LOCKED");
     expect(state.guidance).toContain("indefinite");
+  });
+
+  it("emits clear and flash stages on the coherence loop", () => {
+    const clearState = computeCoherenceSequence({
+      lockStrength: 0.8,
+      t: 4.0,
+    });
+    const flashState = computeCoherenceSequence({
+      lockStrength: 0.8,
+      t: 4.43,
+    });
+
+    expect(clearState.stage).toBe("CLEAR");
+    expect(clearState.clearScreenFlash).toBeGreaterThan(0.5);
+    expect(flashState.stage).toBe("FLASH");
+    expect(flashState.hotFlash).toBeGreaterThan(0.5);
   });
 });

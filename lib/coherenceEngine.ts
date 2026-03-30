@@ -12,6 +12,50 @@ export type CoherenceWarpCoreState = {
   projectedCurve: number[];
 };
 
+export type CoherenceSequenceState = {
+  loopProgress: number;
+  stage: "ENGAGE" | "WARP" | "CLEAR" | "FLASH";
+  sequenceLabel: string;
+  clearScreenFlash: number;
+  hotFlash: number;
+};
+
+export function computeCoherenceSequence({
+  lockStrength,
+  t,
+}: {
+  lockStrength: number;
+  t: number;
+}): CoherenceSequenceState {
+  const loopProgress = (t * 0.2 + lockStrength * 0.08) % 1;
+  const stage =
+    loopProgress < 0.24
+      ? "ENGAGE"
+      : loopProgress < 0.74
+        ? "WARP"
+        : loopProgress < 0.9
+          ? "CLEAR"
+          : "FLASH";
+  const sequenceLabel =
+    stage === "ENGAGE"
+      ? "ENGAGE (INTENTION)"
+      : stage === "WARP"
+        ? "WARP"
+        : stage === "CLEAR"
+          ? "ARRIVAL / CLEAR SCREEN"
+          : "HOT FLASH";
+  const clearScreenFlash = Math.max(0, 1 - Math.abs(loopProgress - 0.82) / 0.11);
+  const hotFlash = Math.max(0, 1 - Math.abs(loopProgress - 0.95) / 0.05);
+
+  return {
+    loopProgress,
+    stage,
+    sequenceLabel,
+    clearScreenFlash,
+    hotFlash,
+  };
+}
+
 export function computeCoherenceWarpCore({
   coherence,
   stability,

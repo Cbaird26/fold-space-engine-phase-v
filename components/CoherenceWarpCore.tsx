@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { computeCoherenceWarpCore } from "@/lib/coherenceEngine";
+import { computeCoherenceSequence, computeCoherenceWarpCore } from "@/lib/coherenceEngine";
 import type { CoherenceHoldMode } from "@/lib/types";
 
 const P = {
@@ -39,15 +39,11 @@ export function CoherenceWarpCore({
     riskScore,
     holdMode,
   });
-  const loopProgress = (t * 0.2 + state.lockStrength * 0.08) % 1;
-  const sequenceLabel =
-    loopProgress < 0.24
-      ? "ENGAGE (INTENTION)"
-      : loopProgress < 0.74
-        ? "WARP"
-        : loopProgress < 0.9
-          ? "ARRIVAL / CLEAR SCREEN"
-          : "HOT FLASH";
+  const sequence = computeCoherenceSequence({
+    lockStrength: state.lockStrength,
+    t,
+  });
+  const { loopProgress, sequenceLabel } = sequence;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -69,9 +65,9 @@ export function CoherenceWarpCore({
     const chamberWidth = 78;
     const chamberHeight = 128;
     const tunnelPulse = Math.sin(t * 4) * 6;
-    const sequenceProgress = (t * 0.2 + state.lockStrength * 0.08) % 1;
-    const arrivalFlash = Math.max(0, 1 - Math.abs(sequenceProgress - 0.82) / 0.11);
-    const hotFlash = Math.max(0, 1 - Math.abs(sequenceProgress - 0.95) / 0.05);
+    const sequenceProgress = loopProgress;
+    const arrivalFlash = sequence.clearScreenFlash;
+    const hotFlash = sequence.hotFlash;
     const warpDrift = 0.55 + state.lockStrength * 0.85;
     const baseColor =
       state.phase === "LOCKED"
@@ -276,7 +272,7 @@ export function CoherenceWarpCore({
       ctx.font = "10px 'Courier New', 'Lucida Console', monospace";
       ctx.fillText(step.label, step.x + 10, sequenceY);
     });
-  }, [coherence, foldScore, holdMode, riskScore, stability, state.holdBand, state.lockStrength, state.phase, state.projectedCurve, state.targetCoherence, t]);
+  }, [coherence, foldScore, holdMode, loopProgress, riskScore, sequence.clearScreenFlash, sequence.hotFlash, stability, state.holdBand, state.lockStrength, state.phase, state.projectedCurve, state.targetCoherence, t]);
 
   return (
     <div style={{ border: `1px solid ${P.border}`, borderRadius: 12, padding: 14, background: P.panel }}>

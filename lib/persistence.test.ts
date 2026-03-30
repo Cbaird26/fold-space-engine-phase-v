@@ -9,6 +9,7 @@ describe("product state persistence", () => {
       decisionOptions: DEFAULT_DECISION_OPTIONS,
       selectedDecisionId: DEFAULT_DECISION_OPTIONS[0].id,
       intentScenario: DEFAULT_INTENT_SCENARIO,
+      coherenceHoldMode: "ARRIVAL",
       advancedOpen: {
         decision: true,
         intent: false,
@@ -20,6 +21,7 @@ describe("product state persistence", () => {
     expect(restored).not.toBeNull();
     expect(restored?.mode).toBe("DECISION");
     expect(restored?.decisionOptions).toHaveLength(3);
+    expect(restored?.coherenceHoldMode).toBe("ARRIVAL");
     expect(restored?.advancedOpen.decision).toBe(true);
   });
 });

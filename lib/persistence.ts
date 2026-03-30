@@ -2,6 +2,7 @@ import type { PersistedProductState } from "./types";
 
 export const PRODUCT_STATE_STORAGE_KEY = "fold-space-engine-product-state";
 const VALID_MODES = new Set(["DECISION", "INTENT", "NAVIGATION", "RESEARCH"]);
+const VALID_HOLD_MODES = new Set(["ARRIVAL", "INDEFINITE"]);
 
 export function serializePersistedProductState(state: PersistedProductState) {
   return JSON.stringify(state);
@@ -23,6 +24,8 @@ export function deserializePersistedProductState(raw: string | null) {
       !Array.isArray(parsed.decisionOptions) ||
       typeof parsed.selectedDecisionId !== "string" ||
       !parsed.intentScenario ||
+      typeof parsed.coherenceHoldMode !== "string" ||
+      !VALID_HOLD_MODES.has(parsed.coherenceHoldMode) ||
       !parsed.advancedOpen
     ) {
       return null;

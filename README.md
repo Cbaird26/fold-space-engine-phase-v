@@ -46,6 +46,7 @@ This repository is designed to invite falsification. If the experimental mapping
 - `Intent` mode maps one outcome into a viability profile with optional raw overrides
 - `Navigation` mode preserves destination-vector and corridor-style exploration
 - `Research` mode keeps the raw controls, quick sweep, logging, and experiment-facing outputs visible
+- A `Coherence Engine Warp Core` visualization now helps users graphically build and hold coherence either until fold-state arrival or in indefinite-hold mode
 - Practical labels such as `Future Viability`, `Coherence Stability`, `Instability Risk`, and `Experimental Visibility` sit on top of the same mathematical core
 
 ## Source lineage

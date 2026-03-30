@@ -1,5 +1,6 @@
 export type Vector3 = [number, number, number];
 export type EngineMode = "DECISION" | "INTENT" | "NAVIGATION" | "RESEARCH";
+export type CoherenceHoldMode = "ARRIVAL" | "INDEFINITE";
 
 export type PracticalInputs = {
   alignment: number;
@@ -126,6 +127,7 @@ export type PersistedProductState = {
   decisionOptions: DecisionOption[];
   selectedDecisionId: string;
   intentScenario: IntentScenario;
+  coherenceHoldMode: CoherenceHoldMode;
   advancedOpen: {
     decision: boolean;
     intent: boolean;

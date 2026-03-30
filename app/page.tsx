@@ -7,6 +7,7 @@ import { EqBlock } from "@/components/EqBlock";
 import { GlowBox } from "@/components/GlowBox";
 import { Knob } from "@/components/Knob";
 import { FoldField } from "@/components/FoldField";
+import { CoherenceWarpCore } from "@/components/CoherenceWarpCore";
 import { ConstraintPanel } from "@/components/ConstraintPanel";
 import { ExperimentPanel } from "@/components/ExperimentPanel";
 import { EngineLog } from "@/components/EngineLog";
@@ -25,6 +26,7 @@ import { savePersistedProductState, loadPersistedProductState } from "@/lib/pers
 import { computeFoldScoreExtended } from "@/lib/engineCore";
 import type {
   DecisionOption,
+  CoherenceHoldMode,
   EngineControls,
   EngineMode,
   IntentScenario,
@@ -136,6 +138,7 @@ export default function FoldEnginePage() {
   const [decisionOptions, setDecisionOptions] = useState<DecisionOption[]>(DEFAULT_DECISION_OPTIONS);
   const [selectedDecisionId, setSelectedDecisionId] = useState(DEFAULT_DECISION_OPTIONS[2].id);
   const [intentScenario, setIntentScenario] = useState<IntentScenario>(DEFAULT_INTENT_SCENARIO);
+  const [coherenceHoldMode, setCoherenceHoldMode] = useState<CoherenceHoldMode>("ARRIVAL");
   const [advancedOpen, setAdvancedOpen] = useState({ decision: false, intent: false });
   const [logs, setLogs] = useState<LoggedRun[]>([]);
   const [t, setT] = useState(0);
@@ -153,6 +156,7 @@ export default function FoldEnginePage() {
       setDecisionOptions(persisted.decisionOptions);
       setSelectedDecisionId(persisted.selectedDecisionId);
       setIntentScenario(persisted.intentScenario);
+      setCoherenceHoldMode(persisted.coherenceHoldMode);
       setAdvancedOpen(persisted.advancedOpen);
     }
     setHydrated(true);
@@ -174,11 +178,12 @@ export default function FoldEnginePage() {
       decisionOptions,
       selectedDecisionId,
       intentScenario,
+      coherenceHoldMode,
       advancedOpen,
     };
 
     savePersistedProductState(state);
-  }, [advancedOpen, decisionOptions, hydrated, intentScenario, mode, selectedDecisionId]);
+  }, [advancedOpen, coherenceHoldMode, decisionOptions, hydrated, intentScenario, mode, selectedDecisionId]);
 
   const selectedDecisionOption = useMemo(
     () => decisionOptions.find((option) => option.id === selectedDecisionId) ?? decisionOptions[0],
@@ -253,6 +258,7 @@ export default function FoldEnginePage() {
       { label: "Engine Status", value: displayEvaluation.engineStatus, accent: statusColor },
       { label: "Future Viability", value: formatPercent(displayEvaluation.foldScore), accent: P.green },
       { label: "Coherence Stability", value: formatPercent(displayEvaluation.stability), accent: P.glow3 },
+      { label: "Hold Mode", value: coherenceHoldMode === "INDEFINITE" ? "Indefinite Hold" : "Until Fold-State", accent: P.glow },
       { label: "Instability Risk", value: formatPercent(displayEvaluation.constraints.riskScore), accent: P.ember },
       { label: "Experimental Visibility", value: displayEvaluation.visibility.toFixed(6), accent: P.gold },
     ];
@@ -262,7 +268,7 @@ export default function FoldEnginePage() {
     }
 
     return cards;
-  }, [displayEvaluation, intentScenario.label, manualControls.target, mode, selectedDecisionEvaluation, winningDecision]);
+  }, [coherenceHoldMode, displayEvaluation, intentScenario.label, manualControls.target, mode, selectedDecisionEvaluation, winningDecision]);
 
   const updateManualControl = <K extends keyof EngineControls>(key: K, value: EngineControls[K]) => {
     setSelectedPresetIndex(null);
@@ -782,7 +788,46 @@ export default function FoldEnginePage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 20, alignItems: "start" }}>
           <div>
-            <FoldField aperture={displayEvaluation.aperture} stability={displayEvaluation.stability} t={t} chosenTarget={displayEvaluation.chosenTarget} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, alignItems: "start" }}>
+              <div>
+                <FoldField aperture={displayEvaluation.aperture} stability={displayEvaluation.stability} t={t} chosenTarget={displayEvaluation.chosenTarget} />
+              </div>
+              <div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  {([
+                    { id: "ARRIVAL", label: "Hold Until Fold-State" },
+                    { id: "INDEFINITE", label: "Indefinite Hold" },
+                  ] as Array<{ id: CoherenceHoldMode; label: string }>).map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => setCoherenceHoldMode(option.id)}
+                      style={{
+                        border: `1px solid ${coherenceHoldMode === option.id ? P.gold : P.border}`,
+                        background: coherenceHoldMode === option.id ? `${P.gold}14` : P.panel,
+                        color: coherenceHoldMode === option.id ? P.gold : P.text,
+                        padding: "8px 10px",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontFamily: FONT,
+                        fontSize: 12,
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                <CoherenceWarpCore
+                  coherence={displayEvaluation.params.coherence}
+                  stability={displayEvaluation.stability}
+                  foldScore={displayEvaluation.foldScore}
+                  riskScore={displayEvaluation.constraints.riskScore}
+                  holdMode={coherenceHoldMode}
+                  t={t}
+                />
+              </div>
+            </div>
+
             <div style={{ marginTop: 12, color: P.dim, fontSize: 12, lineHeight: 1.7 }}>{MODE_NOTES[mode]}</div>
 
             <GlowBox color={P.glow} glow>
@@ -790,6 +835,12 @@ export default function FoldEnginePage() {
               <div><strong>Coherence Stability:</strong> {formatPercent(displayEvaluation.stability)}</div>
               <div><strong>Corridor Aperture:</strong> {displayEvaluation.aperture.toFixed(3)}</div>
               <div><strong>Chosen Path Confidence:</strong> {formatPercent(displayEvaluation.chosenProbability)}</div>
+            </GlowBox>
+
+            <GlowBox color={P.gold}>
+              <div><strong>Coherence Lock Mode:</strong> {coherenceHoldMode === "INDEFINITE" ? "Indefinite Hold" : "Until Fold-State"}</div>
+              <div><strong>Current Coherence:</strong> {displayEvaluation.params.coherence.toFixed(3)}</div>
+              <div><strong>Maintain Goal:</strong> Keep coherence inside the warp-core band until the active fold-state resolves.</div>
             </GlowBox>
 
             <GlowBox color={P.glow3} glow>

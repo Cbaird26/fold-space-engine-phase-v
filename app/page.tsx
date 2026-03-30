@@ -53,6 +53,9 @@ const P = {
   ink: "#080914",
 };
 const FONT = "'Courier New', 'Lucida Console', monospace";
+const SEQUENCE_READY_PROGRESS = 0.04;
+const SEQUENCE_ACHIEVED_PROGRESS = 0.95;
+const SEQUENCE_DURATION_SECONDS = 5.6;
 const MODE_LABELS: Record<EngineMode, string> = {
   DECISION: "Decision",
   INTENT: "Intent",
@@ -144,6 +147,8 @@ export default function FoldEnginePage() {
   const [logs, setLogs] = useState<LoggedRun[]>([]);
   const [t, setT] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  const [engageState, setEngageState] = useState<"READY" | "RUNNING" | "ACHIEVED" | "LANDED">("READY");
+  const [engageStartT, setEngageStartT] = useState<number | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setT((previous) => previous + 0.03), 30);
@@ -185,6 +190,34 @@ export default function FoldEnginePage() {
 
     savePersistedProductState(state);
   }, [advancedOpen, coherenceHoldMode, decisionOptions, hydrated, intentScenario, mode, selectedDecisionId]);
+
+  useEffect(() => {
+    if (engageState !== "ACHIEVED") {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setEngageState("LANDED");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [engageState]);
+
+  useEffect(() => {
+    if (engageState !== "LANDED") {
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      setEngageState("READY");
+      setEngageStartT(null);
+    }, 1800);
+
+    return () => window.clearTimeout(id);
+  }, [engageState]);
 
   const selectedDecisionOption = useMemo(
     () => decisionOptions.find((option) => option.id === selectedDecisionId) ?? decisionOptions[0],
@@ -230,6 +263,22 @@ export default function FoldEnginePage() {
       })),
     );
   }, [manualControls.curvature, manualControls.energy, manualControls.ethics]);
+
+  const sequenceProgress = useMemo(() => {
+    if (engageState === "RUNNING" && engageStartT !== null) {
+      const elapsed = Math.max(0, t - engageStartT);
+      return Math.min(
+        SEQUENCE_ACHIEVED_PROGRESS,
+        SEQUENCE_READY_PROGRESS + (elapsed / SEQUENCE_DURATION_SECONDS) * (SEQUENCE_ACHIEVED_PROGRESS - SEQUENCE_READY_PROGRESS),
+      );
+    }
+
+    if (engageState === "ACHIEVED" || engageState === "LANDED") {
+      return SEQUENCE_ACHIEVED_PROGRESS;
+    }
+
+    return SEQUENCE_READY_PROGRESS;
+  }, [engageStartT, engageState, t]);
 
   const summaryCards = useMemo(() => {
     const statusColor =
@@ -289,17 +338,31 @@ export default function FoldEnginePage() {
     ],
   );
 
+  useEffect(() => {
+    if (engageState === "RUNNING" && sequenceProgress >= SEQUENCE_ACHIEVED_PROGRESS) {
+      setEngageState("ACHIEVED");
+      setEngageStartT(null);
+    }
+  }, [engageState, sequenceProgress]);
+
+  const sequenceT = useMemo(
+    () => (sequenceProgress - coherenceCoreState.lockStrength * 0.08) / 0.2,
+    [coherenceCoreState.lockStrength, sequenceProgress],
+  );
+
   const coherenceSequence = useMemo(
     () =>
       computeCoherenceSequence({
         lockStrength: coherenceCoreState.lockStrength,
-        t,
+        t: sequenceT,
       }),
-    [coherenceCoreState.lockStrength, t],
+    [coherenceCoreState.lockStrength, sequenceT],
   );
 
   const whiteoutActive =
-    coherenceSequence.stage === "CLEAR" || coherenceSequence.stage === "COHERENT";
+    engageState === "LANDED" ||
+    (engageState !== "READY" &&
+      (coherenceSequence.stage === "CLEAR" || coherenceSequence.stage === "COHERENT"));
   const clearScreenOverlayOpacity = whiteoutActive
     ? 1
     : Math.min(
@@ -309,6 +372,15 @@ export default function FoldEnginePage() {
           coherenceSequence.coherentGlow * 4.2,
         ),
       );
+
+  const engageStatusText =
+    engageState === "READY"
+      ? "Console ready. Press Engage to start the sequence."
+      : engageState === "RUNNING"
+        ? "Sequence in motion. Hold course until state is achieved."
+        : engageState === "ACHIEVED"
+          ? "State achieved. Press Esc to land new reality."
+          : "Landing new reality.";
 
   const updateManualControl = <K extends keyof EngineControls>(key: K, value: EngineControls[K]) => {
     setSelectedPresetIndex(null);
@@ -767,6 +839,28 @@ export default function FoldEnginePage() {
           boxShadow: "0 0 320px rgba(255,255,255,0.98), inset 0 0 240px rgba(255,255,255,0.98)",
         }}
       />
+      {engageState === "LANDED" && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            zIndex: 1000,
+            color: "#08111a",
+            fontFamily: FONT,
+            fontSize: 28,
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            textAlign: "center",
+          }}
+        >
+          Landed New Reality
+        </div>
+      )}
       <div
         style={{
           maxWidth: 1320,
@@ -938,6 +1032,53 @@ export default function FoldEnginePage() {
               </div>
               <div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  <button
+                    onClick={() => {
+                      setEngageState("RUNNING");
+                      setEngageStartT(t);
+                    }}
+                    style={{
+                      border: `1px solid ${engageState === "RUNNING" ? P.green : P.glow}`,
+                      background: engageState === "RUNNING" ? `${P.green}16` : `${P.glow}14`,
+                      color: engageState === "RUNNING" ? P.green : P.glow,
+                      padding: "9px 12px",
+                      borderRadius: 8,
+                      cursor: "pointer",
+                      fontFamily: FONT,
+                      fontSize: 12,
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    {engageState === "RUNNING" ? "ENGAGE IN MOTION" : "ENGAGE!"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (engageState === "ACHIEVED") {
+                        setEngageState("LANDED");
+                      }
+                    }}
+                    disabled={engageState !== "ACHIEVED"}
+                    style={{
+                      border: `1px solid ${engageState === "ACHIEVED" ? P.gold : P.border}`,
+                      background: engageState === "ACHIEVED" ? `${P.gold}16` : P.panel,
+                      color: engageState === "ACHIEVED" ? P.gold : P.dim,
+                      padding: "9px 12px",
+                      borderRadius: 8,
+                      cursor: engageState === "ACHIEVED" ? "pointer" : "not-allowed",
+                      fontFamily: FONT,
+                      fontSize: 12,
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    ESC / LAND NEW REALITY
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: 12, color: P.dim, fontSize: 12, lineHeight: 1.7 }}>
+                  {engageStatusText}
+                </div>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   {([
                     { id: "ARRIVAL", label: "Hold Until Fold-State" },
                     { id: "INDEFINITE", label: "Indefinite Hold" },
@@ -967,7 +1108,7 @@ export default function FoldEnginePage() {
                   foldScore={displayEvaluation.foldScore}
                   riskScore={displayEvaluation.constraints.riskScore}
                   holdMode={coherenceHoldMode}
-                  t={t}
+                  t={sequenceT}
                 />
               </div>
             </div>
